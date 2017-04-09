@@ -1,0 +1,81 @@
+@font-face {
+  font-family: TruenoLt;
+  src: url("../fonts/TruenoLt.otf");
+}
+
+@font-face {
+  font-family: LiberationMono-Regular;
+  src: url("../fonts/LiberationMono-Regular.ttf");
+}
+
+#side {
+	font-family: sans-serif;
+	width: 22%;
+	height: 100%;
+	color: white;
+	font-size: 12px;
+	position: fixed;
+	top: 0;
+	left: 0;
+	padding: 20px;
+	background: #30406f; /* For browsers that do not support gradients */
+	font-size: 18px;
+}
+
+#side a {
+	color: white;
+}
+
+#side-content {
+    position: fixed;
+    bottom: calc(50% - 62.5px);
+    height: 125px;
+    width: 22%;
+	color: rgba(255,255,255,0.33);
+}
+
+.side-image {
+}
+
+.side-title {
+	margin-left: calc(50% - 110px);
+}
+
+.side-items {
+	margin-left: calc(50% - 40px);
+	display: inline-block;
+}
+
+.side-text {
+	display: inline-block;
+}
+
+.side-item {
+	width: 100px;
+	height: 20px;
+	margin-top: 10px;
+}
+
+#side-published {
+	left: 0;
+    position: fixed;
+    text-align: center;
+    bottom: 0;
+    width: 22%;
+    padding: 20px;
+	color: rgba(255,255,255,0.33);
+}
+
+@media screen and (max-width: 780px) {
+	#side {
+		display: none;
+	}
+	#paper {
+		margin-left: 10px;
+		padding-right: 10px;
+	}
+	#articles {
+		margin-left: 10px;
+		padding-right: 10px;
+	}
+}

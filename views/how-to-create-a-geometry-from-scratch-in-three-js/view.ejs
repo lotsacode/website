@@ -1,0 +1,321 @@
+<h1>How to create a geometry from scratch in ThreeJS</h1>
+	<script src="/static/js/three.min.js"></script>
+	<script src="/static/js/OrbitControls.js"></script>
+	<p>
+		In this tutorial we'll create some geometries from scratch in ThreeJS.
+		ThreeJS comes with it's own predefined geometries and an importer, but if you want to create a geometry procedurally (e.g. an algorithm that creates randomized trees), you gotta start from scratch.
+		Before we start, let's revise what a geometry exactly is. A geometry consists of <i>vertices</i>, <i>edges</i> and <i>faces</i>. Vertices are points in space, edges are lines between two vertices, and faces are closed loops of edges. 
+	</p>
+	<div class="image-wrapper">
+		<img width="200" src="/static/images/faces-edges-vertices.jpg">
+	</div>
+	<p>In theory faces could be any <i>n-gons</i> such as squares, but turns out that any kind of mesh can be arranged just by using triangles. Because of this fact and for the sake of simplicity Three.js implements only triangle faces.</p>
+	
+	<h2>Example #1 Triangle</h2>
+	<pre><code class="javascript">var triangle = new THREE.Geometry(); 
+triangle.vertices.push(new THREE.Vector3(-1,0,0));
+triangle.vertices.push(new THREE.Vector3(1,0,0));
+triangle.vertices.push(new THREE.Vector3(0, 1, 0));
+triangle.faces.push(new THREE.Face3( 0, 2, 1 ));
+var mesh = new THREE.Mesh(triangle, material);
+scene.add(mesh);</code></pre>
+	<p> <code>THREE.Face3</code> takes three indexes and creates a face from the corresponding vertices. Note that <b>order matters</b>, you should add your vertices counter-clockwise. If you don't, the face will be rendered on the opposite side and you won't be able to see it. 
+	</p>
+	<p>If you pass THREE.DoubleSide to your material's properties you don't have to worry about order. For example:
+<pre><code>var material = new THREE.MeshBasicMaterial({
+	color: 0xff0000, 
+	side: THREE.DoubleSide
+});
+</pre></code>
+	</p>
+
+	There's a small performance hit though.</p>
+	<h2>A note on lightning</h2>
+	<p>If you want your mesh to be affected by lightning you need to include these lines in your render loop:
+<pre><code>geometry.computeFaceNormals(); 
+geometry.computeVertexNormals();
+</pre></code>
+	<h2>Example #2 Tetrahedron</h2>
+    <p>
+		Here's a scene that creates a tetrahedron from scratch.
+	</p>	    	
+<pre><code class="javascript">var scene, camera, mesh, renderer;
+function init() {
+	/*
+	    Set up a simple scene
+	*/
+	scene = new THREE.Scene();
+	var WIDTH = $("#three").width();
+	var HEIGHT = $("#three").height();
+	camera = new THREE.PerspectiveCamera(75, WIDTH/HEIGHT, 1, 10000);
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(WIDTH, HEIGHT);
+	renderer.setClearColor(new THREE.Color(0.98, 0.98, 0.98));
+	$("#three").append(renderer.domElement);
+	camera.position.z = 800; 
+	/*
+	    Create an empty geometry and add the vertices
+	*/
+	var geom = new THREE.Geometry(); 
+	var v0 = new THREE.Vector3(-250,0,0);
+	var v1 = new THREE.Vector3(250,0,0);
+	var v2 = new THREE.Vector3(0, 433, 0);
+	var v3 = new THREE.Vector3(0, 144, 408);
+	geom.vertices.push(v0);
+	geom.vertices.push(v1);
+	geom.vertices.push(v2);
+	geom.vertices.push(v3);
+	/*
+	    Add the four faces. 
+	*/
+	geom.faces.push(new THREE.Face3( 0, 2, 1 ));
+	geom.faces.push(new THREE.Face3( 0, 1, 3 ));
+	geom.faces.push(new THREE.Face3( 1, 2, 3 ));
+	geom.faces.push(new THREE.Face3( 0, 3, 2 ));
+	geom.faces.forEach(function(face){ // Let's make the faces stand out.
+		face.color.setHex( Math.random() * 0xffffff );
+	});
+	/*
+	    Finally, create the mesh
+	*/
+	var material = new THREE.MeshBasicMaterial({
+		color: 0xffffff, 
+		vertexColors: THREE.FaceColors,
+	});
+	mesh = new THREE.Mesh(geom, material);
+	scene.add(mesh);
+};
+
+function render() {
+	requestAnimationFrame(render);
+	renderer.render(scene, camera);
+	mesh.rotation.z += 0.01;
+	mesh.rotation.x += 0.01;
+};
+
+init();
+render();</code></pre>
+<div id="three2" style="width: 100%; height: 300px;"></div>
+	<script>
+		var scene2, camera2, mesh2, renderer2;
+		function init2() {
+			scene2 = new THREE.Scene();
+			var WIDTH = $("#three2").width();
+			var HEIGHT = $("#three2").height();
+			camera2 = new THREE.PerspectiveCamera(75, WIDTH/HEIGHT, 1, 10000);
+			renderer2 = new THREE.WebGLRenderer();
+			renderer2.setSize(WIDTH, HEIGHT);
+			renderer2.setClearColor(new THREE.Color(0.98, 0.98, 0.98));
+			camera2.position.z = 800; 
+			$("#three2").append(renderer2.domElement);
+			
+			var geom = new THREE.Geometry(); 
+			var v0 = new THREE.Vector3(-250,0,0);
+			var v1 = new THREE.Vector3(250,0,0);
+			var v2 = new THREE.Vector3(0, 433, 0);
+			var v3 = new THREE.Vector3(0, 144, 408);
+			geom.vertices.push(v0);
+			geom.vertices.push(v1);
+			geom.vertices.push(v2);
+			geom.vertices.push(v3);
+			geom.faces.push(new THREE.Face3( 0, 2, 1 ));
+			geom.faces.push(new THREE.Face3( 0, 1, 3 ));
+			geom.faces.push(new THREE.Face3( 1, 2, 3 ));
+			geom.faces.push(new THREE.Face3( 0, 3, 2 ));
+			geom.faces.forEach(function(face){
+				face.color.setHex( Math.random() * 0xffffff );
+			});
+
+			var material = new THREE.MeshBasicMaterial({
+				color: 0xffffff, 
+				vertexColors: THREE.FaceColors,
+			});
+			mesh2 = new THREE.Mesh(geom, material);
+			scene2.add(mesh2);
+		};
+		
+		function render2() {
+			requestAnimationFrame(render2);
+			renderer2.render(scene2, camera2);
+			mesh2.rotation.z += 0.01;
+			mesh2.rotation.x += 0.01;
+		};
+
+		init2();
+		render2();
+
+	</script>
+<!--
+	<h2>Example: Sphere</h2>
+	<p>
+		Here's a sphere with phong shading. 
+	</p>
+	<pre><code class="javascript">var scene, camera, mesh, renderer;
+
+function init() {
+	/*
+	    Set up a simple scene
+	*/
+	scene = new THREE.Scene();
+	var WIDTH = $("#three").width();
+	var HEIGHT = $("#three").height();
+	camera = new THREE.PerspectiveCamera(75, WIDTH/HEIGHT, 1, 10000);
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(WIDTH, HEIGHT);
+	renderer.setClearColor(new THREE.Color(1.0, 1.0, 1.0));
+	$("#three").append(renderer.domElement);
+	var light = new THREE.PointLight(0xffffff);
+	light.position.set(100,200,100);
+	scene.add(light);
+	light  = new THREE.DirectionalLight(0xffffff, 1.0);
+	light.position.set(0, 0, 0);
+	scene.add(light);
+	light  = new THREE.AmbientLight(0x404040);
+	scene.add(light);
+	camera.position.z = 400; 
+	/*
+	    Create an empty geometry and add the vertices
+	*/
+	var geom = new THREE.Geometry(); 
+	var radius = 100;
+	var center = new THREE.Vector3(0, 0, 0);
+	var rc = 16;
+	var rd = 16;
+	var step = 2*radius / rc;
+	for (var i = 0; i <= rc; i++) {
+		var x = -radius*(1.0 - 2*i/rc);
+		var r = Math.sqrt(radius*radius - x*x);
+		if (i == 0 || i == rc) {
+			geom.vertices.push(new THREE.Vector3(0,i*step,0));
+		} else {
+			for (var j = 0; j < rd; j++) {
+				geom.vertices.push(new THREE.Vector3(
+					r*Math.cos(j*Math.PI*2/rd),
+					i*step,
+					r*Math.sin(j*Math.PI*2/rd)
+				));		
+			};
+		};	
+	};
+	/*
+	    Add the faces. 
+	*/
+	for (var j = 0; j < rd; j++) {
+		geom.faces.push(new THREE.Face3(j+1, 0, ((j+1) % rd)+1));
+	};
+	for (var i = 0; i < rc-2; i++) {
+		for (var j = 0; j < rd; j++) {
+			geom.faces.push(new THREE.Face3(i*rd + 1 + (j%rd), i*rd + 2 + (j%rd), i*rd + 1 + (j%rd) + rd));
+			geom.faces.push(new THREE.Face3(
+				i*rd + rd + (j%rd), 
+				i*rd + 1 + (j%rd), 
+				i*rd + 1 + (j%rd) + rd)
+			);
+		};
+	};
+	var len = geom.vertices.length;
+	for (var j = 0; j < rd; j++) {
+		if (j != rd-1) geom.faces.push(new THREE.Face3(len-(j+3), len-(j+2), len-1));
+		else geom.faces.push(new THREE.Face3(len-(2), len-(j+2), len-1));
+	};
+	/*
+	    Finally, create the mesh
+	*/
+	var material = new THREE.MeshPhongMaterial({color: 0x55B663, side:THREE.DoubleSide});
+	mesh = new THREE.Mesh(geom, material);
+	geom.computeFaceNormals();   // Important! Without these lines lights wont affect the mesh.
+	geom.computeVertexNormals(); // Important! Without these lines lights wont affect the mesh.
+	scene.add(mesh);
+};
+
+function render() {
+	requestAnimationFrame(render);
+	renderer.render(scene, camera);
+};
+
+init();
+render();</code></pre>
+	<div id="three3" style="width: 100%; height: 300px;"></div>
+	<script>
+		var scene3, camera3, mesh3, renderer3;
+
+		function init3() {
+			scene3 = new THREE.Scene();
+			var WIDTH = $("#three3").width();
+			var HEIGHT = $("#three3").height();
+			camera3 = new THREE.PerspectiveCamera(75, WIDTH/HEIGHT, 1, 10000);
+			renderer3 = new THREE.WebGLRenderer();
+			renderer3.setSize(WIDTH, HEIGHT);
+			renderer3.setClearColor(new THREE.Color(1.0, 1.0, 1.0));
+			$("#three3").append(renderer3.domElement);
+			var material = new THREE.MeshPhongMaterial({color: 0x55B663, side:THREE.DoubleSide});
+			var light = new THREE.PointLight(0xffffff);
+			light.position.set(100,200,100);
+			scene3.add(light);
+			light  = new THREE.DirectionalLight(0xffffff, 1.0);
+			light.position.set(0, 0, 0);
+			scene3.add(light);
+			light  = new THREE.AmbientLight(0x404040);
+			scene3.add(light);
+			var geom = new THREE.Geometry(); 
+			var radius = 100;
+			var center = new THREE.Vector3(0, 0, 0);
+			var rc = 16;
+			var rd = 16;
+			var step = 2*radius / rc;
+			for (var i = 0; i <= rc; i++) {
+				var x = -radius*(1.0 - 2*i/rc);
+				var r = Math.sqrt(radius*radius - x*x);
+				if (i == 0 || i == rc) {
+					geom.vertices.push(new THREE.Vector3(0,i*step,0));
+				} else {
+					for (var j = 0; j < rd; j++) {
+						geom.vertices.push(new THREE.Vector3(
+							r*Math.cos(j*Math.PI*2/rd),
+							i*step,
+							r*Math.sin(j*Math.PI*2/rd)
+						));		
+					};
+				};	
+			};
+		
+			for (var j = 0; j < rd; j++) {
+				geom.faces.push(new THREE.Face3(j+1, 0, ((j+1) % rd)+1));
+			};
+			
+			for (var i = 0; i < rc-2; i++) {
+				for (var j = 0; j < rd; j++) {
+					geom.faces.push(new THREE.Face3(i*rd + 1 + (j%rd), i*rd + 2 + (j%rd), i*rd + 1 + (j%rd) + rd));
+					geom.faces.push(new THREE.Face3(
+						i*rd + rd + (j%rd), 
+						i*rd + 1 + (j%rd), 
+						i*rd + 1 + (j%rd) + rd)
+					);
+				};
+			};
+
+			var len = geom.vertices.length;
+			for (var j = 0; j < rd; j++) {
+				if (j != rd-1) geom.faces.push(new THREE.Face3(len-(j+3), len-(j+2), len-1));
+				else geom.faces.push(new THREE.Face3(len-(2), len-(j+2), len-1));
+			};
+
+			mesh3 = new THREE.Mesh(geom, material);
+
+			geom.computeFaceNormals();
+			geom.computeVertexNormals();
+			scene3.add(mesh3);
+
+			camera3.position.z = 400; 
+		};
+
+		function render3() {
+			requestAnimationFrame(render3);
+			renderer3.render(scene3, camera3);
+			mesh3.rotation.y += 0.01;
+		};
+
+		init3();
+		render3();
+
+	</script>-->

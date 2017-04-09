@@ -1,0 +1,152 @@
+@font-face {
+  font-family: Adam;
+  src: url("../fonts/Adam.ttf");
+}
+
+@font-face {
+  font-family: TruenoLt;
+  src: url("../fonts/TruenoLt.otf");
+}
+
+
+@font-face {
+  font-family: LiberationMono-Regular;
+  src: url("../fonts/LiberationMono-Regular.ttf");
+}
+
+
+body {
+  font-size: 14px;
+  background: rgba(0,0,0,0);
+  color: #404040;
+}
+
+a {
+  text-decoration: none;
+  color: #2277CC;
+  cursor: pointer;
+}
+
+h1, h2, h3, h4 {
+  font-family: sans-serif, Georgia;
+  font-weight: normal;
+}
+
+h1 {
+  font-size: 38px;
+  margin-top: 40px;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: 32px;
+}
+
+
+h3 {
+  font-size: 26px;
+}
+
+p {
+  line-height: 20px;
+}
+
+.paper-date {
+  height: 15px;
+  margin-left: 0px;
+  color: #c0c0c0;
+  font-size: 14px;
+  font-family: sans-serif;
+  position: absolute;
+  top: 15px;
+}
+
+code {
+  line-height: 16px;
+  font-size: 13px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: #fafafa;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+code > pre {
+}
+
+ul {
+  line-height: 20px;
+}
+
+canvas {
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.image-wrapper img {
+  display: block;
+  margin: 0 auto;
+}
+
+#paper {
+  width: calc(75%)
+  min-width: 480px;
+  min-height: 680px;
+  padding-right: 20px;
+  margin-top: 0px;
+  margin-bottom: 40px;
+  font-family: Arial, sans-serif;
+  margin-left: calc(25% + 40px);
+  max-width: 700px;
+}
+
+#paper img {
+  display: block;
+  margin: 0 auto;
+}
+
+.text {
+  margin-bottom: 40px;
+}
+
+#title {
+}
+
+#date img {
+  float: left;
+  opacity: 0.66;
+}
+
+#date div {
+  margin-top: 0px;
+  margin-left: 5px;
+  float: left;
+  display: inline-block;
+}
+
+#navigation {
+  height: 40px;
+  margin-top: 40px;
+  margin-bottom: 40px;
+  line-height: 18px;
+}
+
+#next {
+  float: right;
+  text-align: right;
+  font-weight: bold;
+  font-size: 14px;
+  width: 50%;
+}
+
+#previous {
+  float: left;
+  width: 50%;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+#next div, #previous div {
+  font-weight: normal;
+}
