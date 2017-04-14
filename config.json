@@ -2,6 +2,10 @@
     "released": [
     	"hello-world",
     	"how-to-create-a-geometry-from-scratch-in-three-js",
-    	"polygon-madness-is-here"
+    	"polygon-madness-is-here",
+    	"how-to-optimize-a-threejs-scene",
+    	"three-js-shader-tutorial-part2-normal-mapping-and-textures",
+    	"three-js-shader-tutorial-part1-basic-example",
+    	"heres-a-free-file-uploading-service"
     ]
 }

@@ -1,0 +1,379 @@
+<h1>Three.js shader tutorial part 2 - Normal mapping and textures</h1>
+<p>
+	Normal mapping is a technique for creating "bumps and wrinkles" on the surface of a mesh. 
+	It is done by altering the <i>normal</i> vector inside the vertex shader. 
+	<img width="200px" src="/static/images/normal.png">
+	
+</p>
+<p>
+	The normal vector is added by default to vertex shaders by ThreeJS. It points towards "outside of the  surface". Let's look at an example where an image texture alters the normal vector. The image is stored in <code>uniform sampler2D texture</code>
+</p>
+
+
+<script id="vertex" type="x-shader/x-vertex">
+    varying vec3 pos;
+    varying vec2 vUv;
+	uniform sampler2D texture;
+	vec3 displace(vec3 position) {
+		vUv = uv;
+		vec3 color = texture2D( texture, vUv ).rgb;
+		float amount = (1.0-length(color))*0.05;
+		return position + normal*amount;
+	}
+    void main() {
+    	pos = displace(position); // Update the varying
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(displace(position), 1.0);
+    }
+</script>
+
+<pre><code>&lt;script id="vertex" type="x-shader/x-vertex"&gt;
+	varying vec3 pos;
+	varying vec2 vUv;
+	uniform sampler2D texture;
+	vec3 displace(vec3 position) {
+		vUv = uv;
+		vec3 color = texture2D( texture, vUv ).rgb;
+		float amount = length(color)*0.05;
+		return position + normal*amount;
+	}
+	void main() {
+		pos = displace(position); // Update the varying
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(displace(position), 1.0);
+    }
+&lt;/script&gt;
+</code></pre>
+
+
+<p>
+  The vertex position is stored to <code>varying vec3 pos</code>. It will be used in the fragment shader for lightning calculations.
+ <p>
+
+<script id="fragment" type="x-shader/x-fragment">
+    varying vec3 pos;
+    varying vec2 vUv;
+    void main() {
+    	float light = pow(length(pos),3.0)*1.5;
+        gl_FragColor = vec4(1.0,0.0,0.0,1.0)*light;
+    }
+</script>
+<pre><code>&lt;script id="fragment" type="x-shader/x-fragment"&gt;
+    varying vec3 pos;
+    void main() {
+    	float light = pow(length(pos),3.0)*1.5;
+        gl_FragColor = vec4(1.0,0.0,0.0,1.0)*light;
+    }
+&lt;/script&gt;
+</code></pre>
+
+
+<p>Now let's create the scene and apply the shader to a sphere. 
+The texture is created with <code>THREE.ImageUtils.loadTexture( "/static/images/sphere_texture.jpg")</code>. It is passed to the material as uniform variable.</p>
+<p>The image looks like this:</p>
+<img width="23%" src="/static/images/sphere_texture.jpg"/>
+
+<pre><code>&lt;div id="webgl"&gt;&lt;/div&gt;
+&lt;script&gt;
+    var width = $("#webgl").width();
+    var height  = $("#webgl").height();
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera( 75, width/height, 0.1, 1000 );
+    var renderer = new THREE.WebGLRenderer();
+    renderer.setClearColor( 0xffffff, 1 );
+    renderer.setSize(width, height);
+    document.getElementById("webgl").appendChild( renderer.domElement );
+    var shaderMat= new THREE.ShaderMaterial({
+        uniforms: {
+            texture: { 
+                type: "t", value: THREE.ImageUtils.loadTexture( "/static/images/sphere_texture.jpg") 
+            }
+        },
+        vertexShader:   document.getElementById("vertex").textContent,
+        fragmentShader: document.getElementById("fragment").textContent
+    });
+    var geometry = new THREE.SphereGeometry( 0.8, 128, 128 );
+    var sphere = new THREE.Mesh( geometry, shaderMat);
+    scene.add( sphere );
+    camera.position.z = 2;
+    function render() {
+        requestAnimationFrame( render );
+        renderer.render( scene, camera );
+        sphere.rotation.z += 0.003;
+        sphere.rotation.x += 0.002;
+    }
+    render();
+&lt;/script&gt;
+
+</code></pre>
+
+
+<p>
+	There we go. It's a red spiky thing.
+</p>
+
+
+<div class="three" id="webgl" style="width: 100%; height: 400px;"></div>
+
+<script>
+	var width = $("#webgl").width();
+	var height  = $("#webgl").height();
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera( 75, width/height, 0.1, 1000 );
+    var renderer = new THREE.WebGLRenderer();
+    renderer.setClearColor( 0xffffff, 1 );
+    renderer.setSize(width, height);
+    document.getElementById("webgl").appendChild( renderer.domElement );
+    var shaderMat= new THREE.ShaderMaterial({
+        uniforms: {
+        	texture: { 
+        		type: "t", value: THREE.ImageUtils.loadTexture( "/static/images/sphere_texture.jpg") 
+        	}
+    	},
+        vertexShader:   document.getElementById("vertex").textContent,
+        fragmentShader: document.getElementById("fragment").textContent
+    });
+    var geometry = new THREE.SphereGeometry( 0.8, 128, 128 );
+    var sphere = new THREE.Mesh( geometry, shaderMat);
+    scene.add( sphere );
+    camera.position.z = 2;
+    function render() {
+        requestAnimationFrame( render );
+        renderer.render( scene, camera );
+        sphere.rotation.z += 0.003;
+        sphere.rotation.x += 0.002;
+    }
+    render();
+</script>
+
+<h2>Let's try this with noise</h2>
+
+<p>
+	Let's try to displace the mesh with <a href="https://en.wikipedia.org/wiki/Perlin_noise">perlin noise</a>. Instead of an image, we will use a GLSL function that generates perlin noise on the spot.
+</p>
+<p>Copy paste <a href="https://github.com/ashima/webgl-noise/blob/master/src/noise3D.glsl">this</a> thing to your vertex shader:</p>
+<pre><code>vec3 mod289(vec3 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
+vec4 mod289(vec4 x) {
+  return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
+
+vec4 permute(vec4 x) {
+     return mod289(((x*34.0)+1.0)*x);
+}
+
+vec4 taylorInvSqrt(vec4 r) {
+  return 1.79284291400159 - 0.85373472095314 * r;
+}
+
+float snoise(vec3 v) { 
+  const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+  const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+  vec3 i  = floor(v + dot(v, C.yyy) );
+  vec3 x0 =   v - i + dot(i, C.xxx) ;
+  vec3 g = step(x0.yzx, x0.xyz);
+  vec3 l = 1.0 - g;
+  vec3 i1 = min( g.xyz, l.zxy );
+  vec3 i2 = max( g.xyz, l.zxy );
+  vec3 x1 = x0 - i1 + C.xxx;
+  vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
+  vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
+  i = mod289(i); 
+  vec4 p = permute( permute( permute( 
+             i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+           + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) 
+           + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+  float n_ = 0.142857142857; // 1.0/7.0
+  vec3  ns = n_ * D.wyz - D.xzx;
+  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)
+  vec4 x_ = floor(j * ns.z);
+  vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
+
+  vec4 x = x_ *ns.x + ns.yyyy;
+  vec4 y = y_ *ns.x + ns.yyyy;
+  vec4 h = 1.0 - abs(x) - abs(y);
+  vec4 b0 = vec4( x.xy, y.xy );
+  vec4 b1 = vec4( x.zw, y.zw );
+  vec4 s0 = floor(b0)*2.0 + 1.0;
+  vec4 s1 = floor(b1)*2.0 + 1.0;
+  vec4 sh = -step(h, vec4(0.0));
+  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+  vec3 p0 = vec3(a0.xy,h.x);
+  vec3 p1 = vec3(a0.zw,h.y);
+  vec3 p2 = vec3(a1.xy,h.z);
+  vec3 p3 = vec3(a1.zw,h.w);
+  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+  p0 *= norm.x;
+  p1 *= norm.y;
+  p2 *= norm.z;
+  p3 *= norm.w;
+  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+  m = m * m;
+  return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), 
+                                dot(p2,x2), dot(p3,x3) ) );
+}
+</code></pre>
+
+<p>The vertex shader should look like this:</p>
+
+<pre><code>&lt;script id="vertex" type="x-shader/x-vertex"&gt;
+	varying vec3 pos;
+	uniform float time;
+	/*
+		&lt;Insert noise functions here&gt;
+	*/
+	vec3 displace(vec3 position) {
+		float noise = 0.2*snoise(3.0*position*cos(time*0.5) + sin(time));
+		return position + normal*noise;
+	}
+	void main() {
+		pos = displace(position); // Update the varying
+		gl_Position = projectionMatrix * modelViewMatrix * vec4(displace(position), 1.0);
+	}
+&lt;/script&gt;
+</code></pre>
+
+<script id="vertex2" type="x-shader/x-vertex">
+	varying vec3 pos;
+	varying vec2 vUv;
+	uniform float time;
+
+	vec3 mod289(vec3 x) {
+	  return x - floor(x * (1.0 / 289.0)) * 289.0;
+	}
+
+	vec4 mod289(vec4 x) {
+	  return x - floor(x * (1.0 / 289.0)) * 289.0;
+	}
+
+	vec4 permute(vec4 x) {
+	     return mod289(((x*34.0)+1.0)*x);
+	}
+
+	vec4 taylorInvSqrt(vec4 r) {
+	  return 1.79284291400159 - 0.85373472095314 * r;
+	}
+
+	float snoise(vec3 v) { 
+	  const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+	  const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+	  vec3 i  = floor(v + dot(v, C.yyy) );
+	  vec3 x0 =   v - i + dot(i, C.xxx) ;
+	  vec3 g = step(x0.yzx, x0.xyz);
+	  vec3 l = 1.0 - g;
+	  vec3 i1 = min( g.xyz, l.zxy );
+	  vec3 i2 = max( g.xyz, l.zxy );
+	  vec3 x1 = x0 - i1 + C.xxx;
+	  vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
+	  vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
+	  i = mod289(i); 
+	  vec4 p = permute( permute( permute( 
+	             i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+	           + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) 
+	           + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+	  float n_ = 0.142857142857; // 1.0/7.0
+	  vec3  ns = n_ * D.wyz - D.xzx;
+	  vec4 j = p - 49.0 * floor(p * ns.z * ns.z);  //  mod(p,7*7)
+	  vec4 x_ = floor(j * ns.z);
+	  vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
+
+	  vec4 x = x_ *ns.x + ns.yyyy;
+	  vec4 y = y_ *ns.x + ns.yyyy;
+	  vec4 h = 1.0 - abs(x) - abs(y);
+	  vec4 b0 = vec4( x.xy, y.xy );
+	  vec4 b1 = vec4( x.zw, y.zw );
+	  vec4 s0 = floor(b0)*2.0 + 1.0;
+	  vec4 s1 = floor(b1)*2.0 + 1.0;
+	  vec4 sh = -step(h, vec4(0.0));
+	  vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+	  vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+	  vec3 p0 = vec3(a0.xy,h.x);
+	  vec3 p1 = vec3(a0.zw,h.y);
+	  vec3 p2 = vec3(a1.xy,h.z);
+	  vec3 p3 = vec3(a1.zw,h.w);
+	  vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+	  p0 *= norm.x;
+	  p1 *= norm.y;
+	  p2 *= norm.z;
+	  p3 *= norm.w;
+	  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+	  m = m * m;
+	  return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), 
+	                                dot(p2,x2), dot(p3,x3) ) );
+	}
+	vec3 displace(vec3 position) {
+		float noise = 0.2*snoise(3.0*position*cos(time*0.5) + sin(time));
+		return position + normal*noise;
+	}
+	void main() {
+		vUv = uv;
+		pos = displace(position); // Update the varying
+		gl_Position = projectionMatrix * modelViewMatrix * vec4(displace(position), 1.0);
+	}
+</script>
+
+
+<p>Here's how it looks like with the scene and fragment shader of last example.</p>
+
+<div class="three" id="webgl2"></div>
+
+
+<script>
+	var width = $("#webgl").width();
+	var height  = $("#webgl").height();
+    var scene2 = new THREE.Scene();
+    var camera2 = new THREE.PerspectiveCamera( 75, width/height, 0.1, 1000 );
+    var renderer2 = new THREE.WebGLRenderer();
+    renderer2.setClearColor( 0xffffff, 1 );
+    renderer2.setSize(width, height);
+
+    document.getElementById("webgl2").appendChild( renderer2.domElement );
+    var shaderMat2 = new THREE.ShaderMaterial({
+        uniforms: {
+        	time: {type: 'f', value: 0.0},
+    	},
+        vertexShader:   document.getElementById("vertex2").textContent,
+        fragmentShader: document.getElementById("fragment").textContent
+    });
+    var geometry = new THREE.SphereGeometry( 0.75, 256, 256 );
+    var sphere2 = new THREE.Mesh( geometry, shaderMat2 );
+    scene2.add( sphere2 );
+    camera2.position.z = 2;
+    function render2() {
+        requestAnimationFrame( render2 );
+        renderer2.render( scene2, camera2 );
+        shaderMat2.uniforms.time.value += 0.01;
+    }
+    render2();
+</script>
+<h2>How to generate RGBA-textures</h2>
+<p>
+	If you want to pass an array of data to a shader, textures are your only option. 
+	It's up to your imagination what you can store inside  :)
+</p>
+<pre><code>const texWidth = 1024;
+const texHeight = 1024;
+const size = texWidth * texHeight * 4;
+const RGBA = new Uint8Array(size);
+for (var i = 0; i < size; i++) {
+	RGBA[i] = Math.floor(255*Math.random());
+}
+const texture = new THREE.DataTexture(  // Place this inside uniforms
+	RGBA,
+	texWidth,
+	texHeight,
+	THREE.RGBAFormat,
+	THREE.UnsignedByteType,
+	THREE.UVMapping
+);
+texture.needsUpdate = true;
+</code></pre>
+
+<p>The texture can be dynamically updated on runtime with a new <code>Uint8Array</code> </p>
+
+<pre><code>texture.image = { data: newData, width: texWidth, height: texHeight};
+texture.needsUpdate = true;
+material.uniforms.texture.value = texture;
+</code></pre>
+

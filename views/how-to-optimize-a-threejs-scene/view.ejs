@@ -1,0 +1,173 @@
+<h1>How to optimize a ThreeJS scene</h1>
+
+<p>
+	If you try to render a thousand cubes in ThreeJS like this...
+</p>
+<pre><code>for (var i = 0; i < 1000; i++)
+	var geometry = new THREE.BoxGeometry(1, 1, 1);
+	scene.add(new THREE.Mesh(geometry, material));
+}
+</code></pre>
+<p>
+... you're gonna have a bad time. Rendering a thousand cubes shouldn't be too daunting of a task for a generic GPU, but this solution causes a huge drop in performance. The problem is that the CPU is doing a thousand draw calls each frame and draw calls are pretty expensive. Reducing the amount of draw calls (essentially the number of meshes) is the golden rule of optimizing scenes. So how can we reduce the amount of meshes while keeping everything in place?
+</p>
+<p>
+	The solution is to merge geometries.
+</p>
+<pre><code>var geometry = new THREE.Geometry();
+for (var i = 0; i < 1000; i++) {
+	var g = new THREE.BoxGeometry(1, 1, 1);
+	geometry.mergeMesh(new THREE.Mesh(g));
+}
+scene.add(new THREE.Mesh(geometry, material));
+</code></pre>
+
+<p>
+	Now we can safely render a thousand cubes.
+</p>
+<div id="three" style="width: 100%; height: 200px;"></div>
+
+<script>
+function init() {
+	scene = new THREE.Scene();
+	var WIDTH = $("#three").width();
+	var HEIGHT = $("#three").height();
+	camera = new THREE.PerspectiveCamera(30, WIDTH/HEIGHT, 1, 100);
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(WIDTH, HEIGHT);
+	renderer.setClearColor(new THREE.Color(0.99, 0.99, 0.99));
+	$("#three").append(renderer.domElement);
+	var light = new THREE.PointLight();
+	scene.add(light);
+	var material = new THREE.MeshPhongMaterial({color: 0xFF0000});
+	var g = new THREE.Geometry();
+	for (var i = 0; i < 1000; i++) {
+		var geometry = new THREE.BoxGeometry(2,2,2);
+		var mesh = new THREE.Mesh(geometry);
+		mesh.position.x = (Math.random() - Math.random())*100;
+		mesh.position.y = (Math.random() - Math.random())*50;
+		mesh.position.z = (Math.random() - Math.random())*100;
+		g.mergeMesh(mesh);
+	}
+	scene.add(new THREE.Mesh(g, material));
+};
+
+function render() {
+	requestAnimationFrame(render);
+	renderer.render(scene, camera);
+	camera.rotation.y += 0.002;
+};
+
+init();
+render();
+</script>
+
+<p>
+	Note: <code>geometry.mergeMesh(mesh)</code> is shorthand for <code>geometry.merge(mesh.geometry, mesh.matrix)</code>.
+</p>
+
+<h2>But now my materials are gone! Multimaterials to the rescue.</h2>
+
+<p>
+	If you're trying to merge meshes that have different materials, you need to use something called "multimaterials".
+</p>
+<p>
+	The first step is to define an array of materials, for example
+</p>
+<pre><code>var materials = [
+	new THREE.MeshPhongMaterial({color: 0xff0000}), 
+	new THREE.MeshPhongMaterial({color: 0x00ff00}),
+	new THREE.MeshPhongMaterial({color: 0x0000ff})
+]
+</code></pre>
+<p>
+	Each face of a geometry has a property called <code>materialIndex</code>. 
+	This indicates which material of the array is used. All we need to do is set this index as we like and create a <code>new THREE.MultiMaterial(materials)</code>.
+</p>
+<p>
+	To render a thousand cubes with the materials defined above, you could do this:
+</p>
+<pre><code>var geometry = new THREE.Geometry();
+for (var i = 0; i < 1000; i++) {
+	var g = new THREE.BoxGeometry(1, 1, 1);
+	var index = Math.floor(Math.random()*3) // Random index between 0 and 2.
+	for (var j = 0; j < g.faces.length; j++) {
+		g.faces[j].materialIndex = index; 
+	}
+	geometry.mergeMesh(new THREE.Mesh(g));
+}
+scene.add(new THREE.Mesh(geometry, new THREE.MultiMaterial(materials)));
+</code></pre>
+
+<div id="three2" style="width: 100%; height: 200px;"></div>
+<p>
+	Note: be careful with materialIndex. Your array should contain a material for each index that exists in the faces. If this is not the case a weird error is thrown.
+</p>
+
+<script>
+function init2() {
+	scene2 = new THREE.Scene();
+	var WIDTH = $("#three2").width();
+	var HEIGHT = $("#three2").height();
+	camera2 = new THREE.PerspectiveCamera(30, WIDTH/HEIGHT, 1, 100);
+	renderer2 = new THREE.WebGLRenderer();
+	renderer2.setSize(WIDTH, HEIGHT);
+	renderer2.setClearColor(new THREE.Color(0.99, 0.99, 0.99));
+	$("#three2").append(renderer2.domElement);
+	var light = new THREE.PointLight();
+	scene2.add(light);
+	var material = new THREE.MeshPhongMaterial({color: 0xFF0000});
+	var g = new THREE.Geometry();
+	var materials = [
+	    new THREE.MeshPhongMaterial({color: 0xff0000}), 
+	    new THREE.MeshPhongMaterial({color: 0x00ff00}), 
+	    new THREE.MeshPhongMaterial({color: 0x0000ff})
+	];
+	for (var i = 0; i < 1000; i++) {
+		var geometry = new THREE.BoxGeometry(2,2,2);
+		var index = Math.floor(Math.random()*3) // Random index between 0 and 2.
+		for (var j = 0; j < geometry.faces.length; j++) {
+			geometry.faces[j].materialIndex = index;
+		}
+		var mesh = new THREE.Mesh(geometry);
+		mesh.position.x = (Math.random() - Math.random())*100;
+		mesh.position.y = (Math.random() - Math.random())*50;
+		mesh.position.z = (Math.random() - Math.random())*100;
+		g.mergeMesh(mesh);
+	}
+	scene2.add(new THREE.Mesh(g, new THREE.MultiMaterial(materials)));
+};
+
+function render2() {
+	requestAnimationFrame(render2);
+	renderer2.render(scene2, camera2);
+	camera2.rotation.y += 0.002;
+};
+
+init2();
+render2();
+</script>
+
+<h2>A note on game dynamics</h2>
+
+<p>
+	A common thing in games is to have entities that move. To implement this, you should store the index of the first vertex and the total amount of vertices inside each entity.
+</p>
+<pre><code>// ... Entity class	
+this.addToGeometry = function() {
+	this.index = geometry.vertices.length;
+	geometry.mergeMesh(this.mesh);
+}
+</pre></code>
+Now the entity's position can be edited like this
+<pre><code>// ... Entity class
+for (var i = 0; i < this.mesh.vertices.length; i++) {
+	var vertex = geometry.vertices[this.index + i];
+	// Edit vertex ...
+}
+</pre></code>
+<p>
+	A thing about geometries is that you can't add vertices while rendering, only change their position.
+	The general strategy is to allocate all the possible vertices/faces right from the start, and then hide the vertices/faces that you don't want to see just yet. Set their position to the abyss (or behind the camera) and move them back when needed. Same thing applies for deletion.
+</p>
+

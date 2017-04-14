@@ -1,0 +1,360 @@
+<h1>How to create a 3D spectrogram with Javascript</h1>
+
+<p>
+	In this tutorial we'll use the Web Audio API and ThreeJS to create a 3D-spectrogram.
+</p>
+<p>
+	First off let's initialize Web Audio API and get some music playing.
+	If you're using a plain HTML file, you're going to need a local web server for this code to work. 
+<p>
+	If you have Python installed, calling <code>python -m SimpleHTTPServer</code> from terminal is a quick way to set up a local web server. It searches the current folder for index.html and serves any files from the root. Make sure you have a file called <i>music.mp3</i> in there.
+</p>
+<pre><code>var ctx; // audio context 
+var buf; // audio buffer 
+var fft; // fft data
+
+// Init the sound system 
+function initAudio() { 
+    try { 
+        ctx = new AudioContext();
+        loadFile(); 
+    } catch(e) { 
+        alert('You need webaudio support :('); 
+    } 
+} 
+
+window.addEventListener('load',initAudio,false); 
+
+function loadFile() { 
+    var req = new XMLHttpRequest(); 
+    req.open("GET","music.mp3",true);
+    req.responseType = "arraybuffer"; 
+    req.onload = function() { 
+        //decode the loaded data 
+        ctx.decodeAudioData(req.response, function(buffer) { 
+            buf = buffer; 
+            play(); 
+        }); 
+    }; 
+    req.send(); 
+} 
+
+function play() { 
+    //create a source node from the buffer 
+    var src = ctx.createBufferSource();  
+    src.buffer = buf; 
+    //create fft 
+    fft = ctx.createAnalyser(); 
+    fft.fftSize = samples; 
+    //connect them up into a chain 
+    src.connect(fft); 
+    fft.connect(ctx.destination); 
+    //play immediately 
+    src.start(0); 
+    setup = true; 
+} 
+</code></pre>
+<p>
+	After running that code you should hear music playing.
+	Let's move on to ThreeJS! The spectrogram will be built upon a plane mesh.
+ 	The vertices of the plane are going to be displaced upwards according 
+	to the magnitude of the signal at each point in time and frequency.
+</p>
+<p>
+	The plan is to store the frequency data into a RGBA-texture and pass it to a vertex shader.
+	The vertex shader will displace the vertices accordingly.
+	Another option would be to directly displace the vertices in Javascript, but leveraging the computation to a shader will make things run smoothly.
+</p>
+
+<pre><code>// Set up the scene
+	var scene = new THREE.Scene();
+	var WIDTH = 400;
+	var HEIGHT = 400;
+	var camera = new THREE.PerspectiveCamera(75, WIDTH/HEIGHT, 1, 10000);
+	var renderer = new THREE.WebGLRenderer({ antialias: true });
+	renderer.setSize(WIDTH, HEIGHT);
+	renderer.setClearColor(new THREE.Color(1.0,1.0,1.0));
+	document.getElementById("webgl").append(renderer.domElement);
+	camera.position.z = 1.5; 
+	camera.position.y = 0.5; 
+
+	// frequency data at the current point in time
+	var frequencyData = new Uint8Array(128);
+
+	// frequency data at the last 64 frames
+	var timeFrequencyData = [];
+	for (var i = 0; i < 128*64; i += 1) {
+		timeFrequencyData.push(0);
+		timeFrequencyData.push(0);
+		timeFrequencyData.push(0);
+		timeFrequencyData.push(0);
+	}
+
+	// RGBA-texture that holds timeFrequencyData in the R-component (everything else is zero).
+	var timeFrequencyTexture = new THREE.DataTexture(
+		new Uint8Array(128*64*4),
+		128,
+		64,
+		THREE.RGBAFormat,
+		THREE.UnsignedByteType,
+		THREE.UVMapping);
+	timeFrequencyTexture.needsUpdate = true;
+
+	// Create the plane mesh (with sufficient amt of subdivisions = 256)
+	var plane = new THREE.PlaneGeometry(1.0, 1.5, 256, 256 );
+	// Create a material with custom vertex- and fragment shaders
+	var material = new THREE.ShaderMaterial({
+		uniforms: {
+			time: {type: 'f', value: 0.0},
+			texture: { type: 't', value: timeFrequencyTexture}
+		},
+		vertexShader:   document.getElementById("vertex").textContent,
+		fragmentShader: document.getElementById("fragment").textContent
+	});
+	mesh = new THREE.Mesh(plane, material);
+	mesh.rotation.x = -Math.PI/3;
+	mesh.rotation.z = -Math.PI/2;
+	scene.add(mesh);
+
+	// Render loop
+	function render() {
+		requestAnimationFrame(render);
+		renderer.render(scene, camera);
+		// Let the audio context update the frequency data
+		if (fft != null) fft.getByteFrequencyData(frequencyData); 
+		// Push the frequency values to the r-component of our rgba-texture
+		for (var i = 0; i < 128*1; i += 1) {
+			timeFrequencyData.shift();
+			timeFrequencyData.push(frequencyData[i]);
+			timeFrequencyData.shift();
+			timeFrequencyData.push(0);
+			timeFrequencyData.shift();
+			timeFrequencyData.push(0);
+			timeFrequencyData.shift();
+			timeFrequencyData.push(0);
+		}
+		// Pass the updates to timeFrequencyTexture and shader
+		timeFrequencyTexture.image = { data: Uint8Array.from(timeFrequencyData), width: 128, height: 64};
+		timeFrequencyTexture.needsUpdate = true;
+		material.uniforms.texture.value = timeFrequencyTexture;
+	};
+
+	render();
+</code></pre>
+
+<p>Here is the vertex shader - it fetches frequency data from <code>uniform sampler2D texture</code> and 
+displaces the z-coordinate of the current vertex.</p>
+
+<script src="/static/js/three.min.js"></script>
+
+<pre><code>&lt;script id="vertex" type="x-shader/x-vertex"&gt;
+    varying float displacement; // Varying - passed to fragment shader
+    varying vec3 pos;
+    varying vec2 vUv; // UV-coordinate
+	uniform sampler2D texture; // timeFrequencyTexture
+	vec3 displace(vec3 position) {
+		float x = vUv.x;
+    	float y = vUv.y;
+    	// Get the amount of displacement from texture
+    	// multiply with (1.0 + 4.0*vUv.x) to make high frequencies stand out
+		float d = texture2D(texture, vec2(x, y)).r * 0.75 * (1.0 + 4.0*vUv.x);
+		displacement = d; // Update the varying
+		return position + normal*d;
+	}
+    void main() {
+    	vUv = uv;
+    	pos = displace(position);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(displace(position), 1.0);
+    }
+&lt;/script&gt;
+</pre></code>
+
+<script id="vertex" type="x-shader/x-vertex">
+    varying float displacement; // Varying - passed to fragment shader
+    varying vec3 pos;
+    varying vec2 vUv; // UV-coordinate
+	uniform sampler2D texture; // timeFrequencyTexture
+	vec3 displace(vec3 position) {
+		float x = vUv.x;
+    	float y = vUv.y;
+    	// Get the amount of displacement from texture
+    	// multiply with (1.0 + 4.0*vUv.x) to make high frequencies stand out
+		float d = 2.0*texture2D(texture, vec2(x, y)).r * (vUv.x);
+		displacement = d; // Update the varying
+		return position + normal*d;
+	}
+    void main() {
+    	vUv = uv;
+    	pos = displace(position);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(displace(position), 1.0);
+    }
+</script>
+
+<p>Here is the fragment shader - it does some colouring based on displacement and frequency.</p>
+
+<pre><code>&lt;script id="fragment" type="x-shader/x-fragment"&gt;
+  	varying float displacement;
+    varying vec3 pos;
+    varying vec2 vUv; // UV-coordinate
+    void main() {
+    	float light = pow(displacement, 1.5)*1.0;
+    	vec3 color = vec3(1.0,1.0,1.0);
+        if (displacement != 0.0) {
+        	gl_FragColor = vec4(1.0*light, vUv.x, (1.0-vUv.x), 1.0);
+        } else { 
+        	gl_FragColor = vec4(1.0,1.0,1.0,1.0);
+        }
+    }
+&lt;/script&gt;
+</code></pre>
+
+<script id="fragment" type="x-shader/x-fragment">
+    varying float displacement;
+    varying vec3 pos;
+    varying vec2 vUv; // UV-coordinate
+    void main() {
+    	float light = pow(displacement, 1.5)*1.0;
+    	vec3 color = vec3(1.0,1.0,1.0);
+        if (displacement != 0.0) {
+        	gl_FragColor = vec4(1.0*light, vUv.x, (1.0-vUv.x), 1.0);
+        } else { 
+        	gl_FragColor = vec4(1.0,1.0,1.0,1.0);
+        }
+    }
+</script>
+
+<p>
+	That is all! <a id="play" style="font-size: 20px;">Click here</a> to play some music and see the spectrogram.
+	Time goes from left-right, frequency inwards-outwards, magnitude of the signal upwards-downwards.
+</p>
+
+<div id="webgl"></div>
+
+<script>
+
+	var ctx; // audio context 
+	var buf; // audio buffer 
+	var fft; // fft data
+	 
+	// Init the sound system 
+	function initAudio() { 
+	    try { 
+	        ctx = new AudioContext();
+	        loadFile(); 
+	    } catch(e) { 
+	        alert('You need webaudio support :('); 
+	    } 
+	} 
+	
+	window.addEventListener('load',initAudio,false); 
+
+	// Load and decode mp3 file 
+	function loadFile() { 
+	    var req = new XMLHttpRequest(); 
+	    req.open("GET","/static/audio/elevator_music.mp3",true); 
+	    req.responseType = "arraybuffer"; 
+	    req.onload = function() { 
+	        //decode the loaded data 
+	        ctx.decodeAudioData(req.response, function(buffer) { 
+	            buf = buffer; 
+	            //play(); 
+	        }); 
+	    }; 
+	    req.send(); 
+	} 
+
+	// Play the loaded file 
+	function play() { 
+	    //create a source node from the buffer 
+	    var src = ctx.createBufferSource();  
+	    src.buffer = buf; 
+	    //create fft 
+	    fft = ctx.createAnalyser(); 
+	    fft.fftSize = 256; 
+	    //connect them up into a chain 
+	    src.connect(fft); 
+	    fft.connect(ctx.destination); 
+	    //play immediately 
+	    src.start(0); 
+	} 
+
+	// Set up the scene
+	var scene = new THREE.Scene();
+	var WIDTH = 400;
+	var HEIGHT = 400;
+	var camera = new THREE.PerspectiveCamera(75, WIDTH/HEIGHT, 1, 10000);
+	var renderer = new THREE.WebGLRenderer({ antialias: true });
+	renderer.setSize(WIDTH, HEIGHT);
+	renderer.setClearColor(new THREE.Color(1.0,1.0,1.0));
+	document.getElementById("webgl").append(renderer.domElement);
+	camera.position.z = 5.5; 
+	camera.position.y = 0.5; 
+
+	// Holds frequency data for the current point in time.
+	var frequencyData = new Uint8Array(128);
+
+	// Holds frequency data for the last 64 frames.
+	var timeFrequencyData = [];
+	for (var i = 0; i < 128*64; i += 1) {
+		timeFrequencyData.push(0);
+		timeFrequencyData.push(0);
+		timeFrequencyData.push(0);
+		timeFrequencyData.push(0);
+	}
+
+	// RGBA-texture that holds timeFrequencyData in the R-component (everything else is zero).
+	var timeFrequencyTexture = new THREE.DataTexture(
+		new Uint8Array(128*64*4),
+		128,
+		64,
+		THREE.RGBAFormat,
+		THREE.UnsignedByteType,
+		THREE.UVMapping);
+	timeFrequencyTexture.needsUpdate = true;
+
+	// Create the mesh
+	var plane = new THREE.SphereGeometry(1.0, 256, 256);
+	var material = new THREE.ShaderMaterial({
+        uniforms: {
+        	time: {type: 'f', value: 0.0},
+        	texture: { type: 't', value: timeFrequencyTexture}
+    	},
+        vertexShader:   document.getElementById("vertex").textContent,
+        fragmentShader: document.getElementById("fragment").textContent
+    });
+	mesh = new THREE.Mesh(plane, material);
+	mesh.rotation.x = -Math.PI/3;
+    mesh.rotation.z = -Math.PI/2;
+    mesh.rotation.y = -Math.PI/2;
+	scene.add(mesh);
+
+	// Render loop
+	function render() {
+		requestAnimationFrame(render);
+		renderer.render(scene, camera);
+		// Let the audio context update the frequency data
+    	if (fft != null) fft.getByteFrequencyData(frequencyData); 
+    	// Push the frequency values to the r-component of our rgba-texture
+		for (var i = 0; i < 128*1; i += 1) {
+			timeFrequencyData.shift();
+			timeFrequencyData.push(frequencyData[i]);
+			timeFrequencyData.shift();
+			timeFrequencyData.push(0);
+			timeFrequencyData.shift();
+			timeFrequencyData.push(0);
+			timeFrequencyData.shift();
+			timeFrequencyData.push(0);
+		}
+		// Pass the updates to timeFrequencyTexture and shader
+		timeFrequencyTexture.image = { data: Uint8Array.from(timeFrequencyData), width: 128, height: 64};
+		timeFrequencyTexture.needsUpdate = true;
+		material.uniforms.texture.value = timeFrequencyTexture;
+	};
+
+	render();
+
+	$("#play").mousedown(function(e) {
+		play();
+	});
+
+</script>
