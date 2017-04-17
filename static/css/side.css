@@ -18,12 +18,12 @@
 	top: 0;
 	left: 0;
 	padding: 20px;
-	background: #30406f; /* For browsers that do not support gradients */
+	background: #202040;
 	font-size: 18px;
 }
 
 #side a {
-	color: white;
+	color: #c0c0c0;
 }
 
 #side-content {
@@ -35,6 +35,7 @@
 }
 
 .side-image {
+	opacity: 0.66;
 }
 
 .side-title {

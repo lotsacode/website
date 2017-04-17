@@ -14,6 +14,11 @@
   src: url("../fonts/LiberationMono-Regular.ttf");
 }
 
+pre {
+  tab-size: 4;
+  -o-tab-size: 4; /* Code for Opera 10.6-12.1 */
+  -moz-tab-size: 4; /* Code for Firefox */
+}
 
 body {
   font-size: 14px;
