@@ -21,9 +21,11 @@ pre {
 }
 
 body {
-  font-size: 14px;
+  font-size: 16px;
   background: rgba(0,0,0,0);
-  color: #404040;
+  color: #202020;
+  font-family: sans-serif;
+  line-height: 24px;
 }
 
 a {
@@ -33,14 +35,14 @@ a {
 }
 
 h1, h2, h3, h4 {
-  font-family: sans-serif, Georgia;
-  font-weight: normal;
+  font-family: sans-serif;
 }
 
 h1 {
   font-size: 38px;
   margin-top: 40px;
   margin-bottom: 20px;
+  line-height: 42px;
 }
 
 h2 {
@@ -52,8 +54,8 @@ h3 {
   font-size: 26px;
 }
 
-p {
-  line-height: 20px;
+h4 {
+  font-size: 20px;
 }
 
 .paper-date {
@@ -61,7 +63,6 @@ p {
   margin-left: 0px;
   color: #c0c0c0;
   font-size: 14px;
-  font-family: sans-serif;
   position: absolute;
   top: 15px;
 }
@@ -101,7 +102,6 @@ canvas {
   padding-right: 20px;
   margin-top: 0px;
   margin-bottom: 40px;
-  font-family: Arial, sans-serif;
   margin-left: calc(25% + 40px);
   max-width: 700px;
 }

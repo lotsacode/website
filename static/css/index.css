@@ -28,7 +28,6 @@ body {
 
 a {
 	text-decoration: none;
-	color: black;
 } 
 
 #header-description {
@@ -69,11 +68,10 @@ hr {
 	font-family: sans-serif;
 }
 
-
 .header {
-	font-size: 16px;
+	font-size: 18px;
 	margin-top: 5px;
-	color: #3060dd;
+	color: #4040c0;
 	line-height: 20px;
 	font-family: sans-serif;
 }

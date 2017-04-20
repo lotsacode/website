@@ -27,23 +27,6 @@
     The catch is that you have to learn GLSL, shaders can be difficult to master and very annoying to debug.
 </p>
 
-<h2>Built-in uniforms and attributes in ThreeJS</h2>
-
-<p>ThreeJS comes with a bunch of <a href="https://threejs.org/docs/api/renderers/webgl/WebGLProgram.html">default uniforms and attributes</a>. For a vertex shader, they are:</p>
-
-<p><code>uniform mat4 modelMatrix;      // transforms a 3-vector from model space to world space</code></p>
-<p><code>uniform mat4 viewMatrix;       // transforms a 3-vector from world space to camera space</code></p>
-<p><code>uniform mat4 projectionMatrix; // transforms a 3-vector from camera space to screen space</code></p>
-<p><code>uniform vec3 cameraPosition;   // camera position in world space</code><br>
-<p><code>attribute vec3 position;       // vertex position in model space</code><br>
-<p><code>attribute vec3 normal;         // vector pointing towards “outside of the surface”</code></p>
-
-<p>The fragment shader comes with fewer variables. (Note, you can use varyings to pass down variables to the fragment shader).</p>
-
-<p><code>uniform mat4 viewMatrix;</code></p>
-<p><code>uniform vec3 cameraPosition;</code></p>
-
-
 <h2>Example vertex shader</h2>
 
 <script id="vertex" type="x-shader/x-vertex">
@@ -174,6 +157,25 @@
 });
 </code></pre>
 Uniform types available in ThreeJS can be seen <a href="https://github.com/mrdoob/three.js/wiki/Uniforms-types">here</a>. You can use floats, vectors, matrices and textures.</p>
+
+
+<h2>Built-in uniforms and attributes in ThreeJS</h2>
+
+<p>ThreeJS comes with a bunch of <a href="https://threejs.org/docs/api/renderers/webgl/WebGLProgram.html">default uniforms and attributes</a>. For a vertex shader, they are:</p>
+
+<p><code>uniform mat4 modelMatrix;      // transforms a 3-vector from model space to world space</code></p>
+<p><code>uniform mat4 viewMatrix;       // transforms a 3-vector from world space to camera space</code></p>
+<p><code>uniform mat4 projectionMatrix; // transforms a 3-vector from camera space to screen space</code></p>
+<p><code>uniform vec3 cameraPosition;   // camera position in world space</code><br>
+<p><code>attribute vec3 position;       // vertex position in model space</code><br>
+<p><code>attribute vec3 normal;         // vector pointing towards “outside of the surface”</code></p>
+
+<p>The fragment shader comes with fewer variables. (Note, you can use varyings to pass down variables to the fragment shader).</p>
+
+<p><code>uniform mat4 viewMatrix;</code></p>
+<p><code>uniform vec3 cameraPosition;</code></p>
+
+
 
 
 

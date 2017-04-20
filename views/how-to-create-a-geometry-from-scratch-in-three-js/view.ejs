@@ -2,14 +2,14 @@
 	<script src="/static/js/three.min.js"></script>
 	<script src="/static/js/OrbitControls.js"></script>
 	<p>
-		In this tutorial we'll create some geometries from scratch in ThreeJS.
-		ThreeJS comes with it's own predefined geometries and an importer, but if you want to create a geometry procedurally (e.g. an algorithm that creates randomized trees), you gotta start from scratch.
+		In this tutorial we'll create geometries from scratch in ThreeJS.
+		ThreeJS comes with it's own predefined geometries and an importer, but if you want to create a geometry procedurally (e.g. an algorithm that creates randomized shapes), you gotta start from scratch.
 		Before we start, let's revise what a geometry exactly is. A geometry consists of <i>vertices</i>, <i>edges</i> and <i>faces</i>. Vertices are points in space, edges are lines between two vertices, and faces are closed loops of edges. 
 	</p>
 	<div class="image-wrapper">
 		<img width="200" src="/static/images/faces-edges-vertices.jpg">
 	</div>
-	<p>In theory faces could be any <i>n-gons</i> such as squares, but turns out that any kind of mesh can be arranged just by using triangles. Because of this fact and for the sake of simplicity Three.js implements only triangle faces.</p>
+	<p>In theory faces could be any <i>n-gons</i> such as squares, but any kind of mesh can be arranged just by using triangles. Because of this fact and for the sake of simplicity Three.js implements only triangle faces.</p>
 	
 	<h2>Example #1 Triangle</h2>
 	<pre><code class="javascript">var triangle = new THREE.Geometry(); 

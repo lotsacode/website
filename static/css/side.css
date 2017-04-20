@@ -12,39 +12,40 @@
 	font-family: sans-serif;
 	width: 22%;
 	height: 100%;
-	color: white;
 	font-size: 12px;
 	position: fixed;
 	top: 0;
 	left: 0;
 	padding: 20px;
-	background: #202040;
+	background: #202850;
 	font-size: 18px;
 }
 
 #side a {
-	color: #c0c0c0;
+	color: #ffffff;
 }
 
 #side-content {
     position: fixed;
-    bottom: calc(50% - 62.5px);
+    bottom: calc(50% - 20px);
     height: 125px;
     width: 22%;
 	color: rgba(255,255,255,0.33);
 }
 
 .side-image {
-	opacity: 0.66;
+	border-radius: 50px;
 }
 
 .side-title {
-	margin-left: calc(50% - 110px);
+	margin-left: calc(50% - 50px);
 }
 
 .side-items {
-	margin-left: calc(50% - 40px);
+	margin-left: calc(50% - 30px);
 	display: inline-block;
+	margin-top: 10px;
+	opacity: 0.8;
 }
 
 .side-text {
