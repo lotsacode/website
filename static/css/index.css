@@ -24,6 +24,7 @@ body {
     width: 100%;
     height: 100%;
     overflow-x: hidden;
+    font-family: sans-serif;
 }
 
 a {
@@ -43,35 +44,28 @@ a {
 
 
 #articles {
-	width: 100%;
+	width: 78%;
 	height: 100%;
-	margin-left: calc(22% + 50px);
-	margin-bottom: 40px;
-	margin-top: 10px;
+	margin-left: calc(22% + 5px);
 	color: #404040;
+	font-size: 10px;
 }
 
 .article {
-	margin-left: 30px;
-	margin-bottom: 0px;
-}
-
-hr {
-	border: 1px solid #f0f0f0;
-	margin-left: -10px;
+	margin-left: 50px;
+	background: #ffffff;
+	float: left;
+	clear: left;
+	margin-top: 10px;
+	border-radius: 5px;
 }
 
 .date {
-	height: 15px;
-	color: #b0b0c0;
-	font-size: 14px;
-	font-family: sans-serif;
+	height: 16px;
+	color: rgba(0,0,0,0.4);
+	font-size: 16px;
 }
 
 .header {
-	font-size: 18px;
-	margin-top: 5px;
-	color: #4040c0;
-	line-height: 20px;
-	font-family: sans-serif;
+	color: #404040;
 }

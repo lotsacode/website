@@ -1,30 +1,35 @@
 <div id="side">
 	<div id="side-content">
-		<div class="side-title">
-			<!--<img class="side-image" width="80px" src="/static/images/"/>-->
-		</div>
 		<div class="side-items">
-			<div class="side-item"><a href="/">
-				<img class="side-image" width="15px" src="/static/images/archive.png"/>
+			<div class="side-item" id="side-item-archive"><a href="/">
+				<!--<img class="side-image" width="15px" src="/static/images/archive.png"/>-->
 				<div class="side-text">Archive</div></a>
 			</div>
-			<div class="side-item"><a href="https://www.youtube.com/channel/UCJhsDaIDhsqJxRIcCDaMgrg">
-				<img class="side-image" width="15px" src="/static/images/videos.png"/>
+			<div class="side-item" id="side-item-videos"><a href="https://www.youtube.com/channel/UCJhsDaIDhsqJxRIcCDaMgrg">
+				<!-- <img class="side-image" width="15px" src="/static/images/videos.png"/> -->
 				<div class="side-text">Youtube</div></a>
 			</div>
 			<!--<div class="side-item">
 				<img class="side-image" width="15px" src="/static/images/rss.png"/>
 				<div class="side-text">RSS</div>
 			</div>-->
-			<div class="side-item"><a href="http://github.com/lotsacode">
-				<img class="side-image" width="15px" src="/static/images/git.png"/>
+			<div class="side-item" id="side-item-github"><a href="http://github.com/lotsacode">
+				<!--<img class="side-image" width="15px" src="/static/images/git.png"/>-->
 				<div class="side-text">Github</div></a>
 			</div>
-			<div class="side-item"><a href="/post/hello-world">
-				<img class="side-image" width="15px" src="/static/images/about.png"/>
+			<div class="side-item" id="side-item-about"><a href="/post/hello-world">
+				<!--<img class="side-image" width="15px" src="/static/images/about.png"/>-->
 				<div class="side-text">About</div></a>
 			</div>
 		</div>
 	</div>
-	<div id="side-published">Last published <%=lastPub%></div>
+	<!--<div id="side-published">Last published <%=lastPub%></div>-->
 </div>
+<script>
+	$(".side-text").mouseenter(function(){
+		$(this).css({ transform: 'scale(1.1)' });
+	});
+	$(".side-text").mouseleave(function(){
+		$(this).css({ transform: 'scale(1.0)' });
+	});
+</script>

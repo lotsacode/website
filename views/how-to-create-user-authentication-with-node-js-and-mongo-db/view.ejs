@@ -1,0 +1,315 @@
+<h1>How to create user authentication with NodeJS and MongoDB</h1>
+<p>
+	Let's make a simple login/register page with NodeJS and MongoDB! 
+	I'm just gonna copy paste the JS/HTML5 here without much explanation. Here's the things we'll use
+	<ul>
+		<li>MongoDB and NodeJS</li>
+		<li>Express, templating with EJS</li>
+		<li>jQuery</li>
+	</ul>
+</p>
+<p>Here's the end result</p>
+<iframe width="100%" height="400" src="http://youtube.com/embed/z6tMRxGG6Ss"></iframe>
+<p>Download MongoDB from <a href="https://www.mongodb.com/">here</a>. To start it with windows, navigate to the installation directory and run <code>./bin/mongod.exe</code>. 
+The data is stored by default at <code>X:/data</code>. Not sure about Linux/OSX but the setup should be similiar. Install the server side dependencies with npm <code>npm install mongodb express express-session ejs</code>.</p>
+<h2>The server</h2>
+<pre><code>const MongoClient = require('mongodb').MongoClient;
+MongoClient.connect('mongodb://localhost:27017/todo', function(err, db) {
+
+	if (err) return console.log(err);
+	var express = require('express');
+	var session = require('express-session');
+	var app = express();
+	app.use(session({secret: 'my-secret-password'}));
+	app.set('view engine', 'ejs');
+
+	// Index page
+	app.get('/', function(req, res) {
+		res.render('index.ejs', {user: req.session.user});
+	});
+
+	// Register POST-request
+	app.post("/register/:username/:email/:password", function(req, res) {
+		if (req.params.username.length < 4) {
+			res.send("Try again, username too short.")
+		} else if (req.params.password.length < 4) {
+			res.send("Try again, password too short.")
+		} else {
+			db.collection('users').find({name: req.params.username}).toArray(function(err, result) {
+				if (err) console.log(err);
+				if (result.length > 0) {
+					// Username taken
+					res.send("Try again, username taken.")
+				} else {
+					// All good, insert
+					var user = {
+						name: req.params.username, 
+						email: req.params.email,
+						password: req.params.password
+					};
+					db.collection('users').insert(user, function(err) {
+						if (err) console.log(err);
+						req.session.user = user;
+						res.send("/");
+					});
+				}
+			});
+		}
+	});
+
+	// Login POST-request
+	app.post("/signin/:username/:password", function(req, res) {
+		db.collection('users').find({name: req.params.username}).toArray(function(err, users) {
+			if (err) console.log(err);
+			if (users.length == 0 || users[0].password != req.params.password) {
+				// Invalid credentials
+				if (err) console.log(err);
+				res.send("Try again, invalid credentials.");
+			} else {
+				// Found user, sign in
+				req.session.user = users[0];
+				res.send("/");
+			}
+		});
+	});
+
+	// Sign out POST-request
+	app.post("/signout", function(req, res) {
+		req.session.user = null;
+		res.send("/");
+	});
+	
+	// Static files
+	app.use('/static', express.static(__dirname + '/static'));
+	
+	// Start the server
+	app.listen(5881, function() {
+		console.log('Listening on port 5881.');
+	});
+
+});
+</code></pre>
+<p>
+	A couple notes. Session data is unique for each client so we can safely store the user object to <code>req.session</code>. 
+	In a real world situation you'd want to use HTTPS to prevent anyone from stealing credentials on their way to the server.
+	I haven't tested the server for security issues, so use at your own risk.
+</p>
+<h2>The HTML</h2>
+<p> Make sure to include jQuery to <code>./static/js/jquery-2.1.1.min.js</code>. The view should be at <code>./views/index.ejs</code></p>
+
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+	&lt;script src="/static/js/jquery-2.1.1.min.js"&gt;&lt;/script&gt;
+	&lt;style&gt;
+		body {
+			font-family: sans-serif;
+		}
+		.button {
+			padding: 10px;
+			color: white;
+			background: green;
+			display: inline-block;
+			cursor: pointer;
+		}
+		#overlay {
+			position: absolute;
+			top: 0px;
+			left: 0px;
+			width: 100%;
+			height: 100%;
+			background: rgba(0,0,0,0.8);
+			display: none;
+		}
+		#profile, #signin, #register {
+			text-align: center;
+			position: absolute;
+			width: 400px;
+			left: calc(50% - 200px);
+			top: calc(50% - 200px);
+			display: none;
+			padding: 10px;
+			background: white;
+			z-index: 1;
+		}
+		.submit {
+			width: 100%;
+			padding: 0px;
+			padding-top: 5px;
+			padding-bottom: 5px;
+			font-size: 22px;
+			background: #20c020;
+		}
+		#register-message, #signin-message {
+			margin-bottom: 10px;
+			font-size: 20px;
+		}
+		#upload input, #register input, #signin input {
+			width: 380px;
+			border: none;
+			margin: 0;
+			padding: 10px;
+			padding-bottom: 10px;
+			display: block;
+			margin-bottom: 10px;
+			border: 1px solid #c0c0c0;
+		}
+	&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+	&lt;div id="menu"&gt;
+		&lt;%if (user) { %&gt;
+			&lt;a class="button" id="profile-button"&gt;My profile&lt;/a&gt;
+			&lt;a class="button" id="signout-button"&gt;Sign out&lt;/a&gt;
+		&lt;% } else { %&gt;
+			&lt;a class="button" id="signin-button"&gt;Sign in&lt;/a&gt;
+			&lt;a class="button" id="register-button"&gt;Create account&lt;/a&gt;
+		&lt;% } %&gt;
+	&lt;/div&gt;
+	&lt;div id="overlay"&gt;&lt;/div&gt;
+	&lt;div id="register"&gt;
+		&lt;div id="register-message"&gt;Create account&lt;/div&gt;
+		&lt;input type="text" id="register-username" placeholder="Username"&gt;&lt;/input&gt;
+		&lt;input type="text" id="register-email" placeholder="Valid email address"&gt;&lt;/input&gt;
+		&lt;input type="password" id="register-password" placeholder="Password"&gt;&lt;/input&gt;
+		&lt;input type="password" id="register-passwordagain" placeholder="Password, again"&gt;&lt;/input&gt;
+		&lt;div class="button submit" id="register-submit"&gt;Submit&lt;/div&gt;
+	&lt;/div&gt;
+	&lt;% if (user) { %&gt;
+		&lt;div id="profile"&gt;
+			&lt;p&gt;Your name is &lt;%= user.name %&gt; and your email address is &lt;%= user.email %&gt;&lt;/p&gt;
+		&lt;/div&gt;
+	&lt;% } %&gt;
+	&lt;div id="signin"&gt;
+		&lt;div id="signin-message" autofocus&gt;Sign in&lt;/div&gt;
+		&lt;input type="text" id="signin-username" autocomplete="on" placeholder="Username"&gt;&lt;/input&gt;
+		&lt;input type="password" id="signin-password" placeholder="Password"&gt;&lt;/input&gt;
+		&lt;div class="button submit" id="signin-submit"&gt;Submit&lt;/div&gt;
+	&lt;/div&gt;
+&lt;script&gt;
+$(document).ready(function() {
+
+	$("#signin-button").click(function() {
+		$("#signin").fadeIn(500);
+		$("#overlay").fadeIn(500);
+		$("#signin-username").focus();
+	});
+
+	$("#register-button").click(function() {
+		$("#register").fadeIn(500);
+		$("#overlay").fadeIn(500);
+		$("#register-username").focus();
+	});
+
+	$("#signout-button").click(function() {
+		$.post("/signout", function(data) {
+			window.location = data;
+		});
+	});
+
+	$("#menu-icon").click(function() {
+		$("#menu").fadeIn(500);
+		$("#overlay").fadeIn(500);
+	});
+
+	$("#profile-button").click(function() {
+		$("#profile").fadeIn(500);
+		$("#overlay").fadeIn(500);
+	});
+
+	$("#overlay").click(function() {
+		$("#signin").fadeOut(500);
+		$("#register").fadeOut(500);
+		$("#profile").fadeOut(500);
+		$("#overlay").fadeOut(500);
+	});
+
+	$("#register-submit").click(function() {
+		if ($("#register-username").val().trim() == "") {
+			// Empty username
+			$("#register-username").css("outline", "2px solid red");
+			return;
+		} else {
+			$("#register-username").css("outline", "none");
+		}
+		// Email regexp checker
+		var re = /^(([^&lt;&gt;()\[\]\\.,;:\s@"]+(\.[^&lt;&gt;()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/; 
+		if (!re.test($("#register-email").val().trim())) {
+			// Invalid email
+			$("#register-email").css("outline", "2px solid red");
+			return;
+		} else {
+			$("#register-email").css("outline", "none");
+		} 
+		if ($("#register-password").val() == "") {
+			// Empty password
+			$("#register-password").css("outline", "2px solid red");
+			return;
+		} else {
+			$("#register-password").css("outline", "none");
+		} 
+		if ($("#register-passwordagain").val() == "" || $("#register-passwordagain").val() != $("#register-password").val()) {
+			// Password mismatch
+			$("#register-passwordagain").css("outline", "2px solid red");
+			return;
+		} else {
+			$("#register-passwordagain").css("outline", "none");
+		}
+		$("#register-submit").html("Creating account...")
+	    $.post("/register/" + 
+	    	$("#register-username").val() + "/" + 
+	    	$("#register-email").val() +  "/" + 
+	    	$("#register-password").val(), function(data) {
+	        if (data[0] != '/') {
+	        	$("#register-message").html(data);
+	        	$("#register-submit").html("Create account");
+	        } else {
+	        	$("#register-submit").html("Success!")
+		    	$("#register").fadeOut(2000);
+		     	$("#overlay").fadeOut(2000);
+		    	window.location = data;
+	        }
+	    });
+	});
+
+	$("#signin-submit").click(function() {
+		if ($("#signin-username").val().trim() == "") {
+			$("#signin-username").css("outline", "2px solid red");
+			return;
+		} else {
+			$("#signin-username").css("outline", "none");
+		}
+		if ($("#signin-password").val().trim() == "") {
+			$("#signin-password").css("outline", "2px solid red");
+			return;
+		} else {
+			$("#signin-password").css("outline", "none");
+		} 
+		$("#signin-submit").html("Signing in...");
+	    $.post("/signin/" + $("#signin-username").val().trim() + "/" + $("#signin-password").val(), function(data) {
+	    	if (data[0] != '/') {
+	        	$("#signin-message").html(data);
+	        	$("#signin-submit").html("Sign in");
+	        } else {
+	        	$("#signin-submit").html("Success!")
+		    	$("#signin").fadeOut(2000);
+		     	$("#overlay").fadeOut(2000);
+		    	window.location = data;
+	        }
+	    });
+	});
+
+	// Submit data with enter keypress
+	$('#register, #signin').keydown(function(event) {
+	    if (event.keyCode == 13) {
+	        $("#" + this.id + "-submit").click()
+	        return false;
+	    }
+    });
+
+});
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>That is all! I included sanity checks in both client- and server side (except for the email). It's important to check things at the server since it's possible to bypass them in the client side.</p>

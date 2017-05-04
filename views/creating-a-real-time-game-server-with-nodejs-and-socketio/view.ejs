@@ -1,11 +1,9 @@
 <h1>Creating a real-time game server with NodeJS and Socket.io</h1>
+<p>In this tutorial I'll show you a simple SocketIO app and then a multiplayer "game" made with ThreeJS that looks like this</p>
+<iframe width="100%" height="400" src="https://www.youtube.com/embed/t7PgcueEKF4"></iframe>
 <p>	
 	SocketIO enables you to listen and stream data over the internet. It's perfect for network beginners, as it abstracts away all the nasty protocol stuff. <code>socket.on(...)</code> listens for data from clients and <code>socket.emit(...)</code> sends data to a connected client. You can pass arrays or objects and SocketIO will do all the dirty work for ya. 
 </p>
-<p>In this tutorial we will look at at a simple SocketIO app and then build a game server that looks like this:</p>
-
-<iframe width="100%" height="400" src="https://www.youtube.com/embed/t7PgcueEKF4"></iframe>
-
 
 <h2>Simple example</h2>
 
@@ -79,16 +77,22 @@ Here's the HTML client
 	The client script sends a 'hello' message to <code>http://localhost:4000</code>. In a real-world situation this would be <code>http://myawesomewebsite.com:4000</code>. The message is sent over WebSockets - a protocol that enable the browser to send streams of messages on top of TCP. The server picks up the message and sends a response back to the client.
 </p>
 
+<h3>Wait, why websockets?</h3>
+<p>
+	Why not just communicate with good old HTTP requests? The thing is that a single HTTP request contains a big chuck of unrelated data.
+	WebSockets is better for situations that involve low-latency communications, which is exactly what we're aiming for in an online game.
+</p>
+
 <h3>Alternatives to socket.emit</h3>
 <p>
-	<code>socket.emit(...)</code> sends a message to a single client. If you want to send a message to ALL clients, including the sender itself, you can use <code>io.sockets.emit('hello', data)</code>. To send a message to all clients except the sender, you can use <code>socket.broadcast.emit('hello', data)</code>.
+	In the last example we used <code>socket.emit(...)</code> to send a message. If you want to send a message to ALL clients, including the sender itself, you can use <code>io.sockets.emit('hello', data)</code>. To send a message to all clients except the sender, you can use <code>socket.broadcast.emit('hello', data)</code>.
 </p>
 
 <h2>The game server</h2>
 
 <p>
 	Now that we understand how Socket.io works, it's time to make a 3D scene where the clients can see eachother and move. 
-	Let's start with the necessary express code
+	Let's start with the web server code
 </p>
 <pre><code>var http = require('http');
 var express = require('express');
@@ -114,7 +118,7 @@ app.listen(9000, function() {
 </code></pre>
 
 <p>
-	In a multiplayer scenario it's important to make sure that each game advances in the same way. The server should be given authority over data that affects the outcome of the game. In this example the server stores a World-object that contains player data.
+	In a multiplayer scenario you typically have some kind of data structure that models the game world.  This data structure should have authority over data that affects the outcome of the game. Let's add a World-object to the server which contains player data.
 </p>
 
 <pre><code>// Game world
@@ -130,7 +134,7 @@ var World = {
 <p>
 	Note that the players are stored inside an object instead of an array. I found objects more convenient but it's a matter of taste. 
 	You can iterate over the object in the client side and access them with id's.
-	Next up is the socketIO part.
+	Now let's add the socketIO stuff.
 </p>
 <pre><code>// Logging helper
 function log(message) {
@@ -174,16 +178,17 @@ io.on('connection', function (socket) {
 </code></pre>
 <p>The client calls <code>'init'</code> after loading the page. This causes the server to create a new player and send back player data. After that the client adds the new player to scene and starts drawing the game. The socket id is used to differentiate between other players. </p>
 <p>
-	The client calls <code>'update'</code> at each draw frame, usually around 60 times a second. This causes the server to send back player data from all the connected clients. 
+	The client calls <code>'update'</code> at each draw frame, usually around 60 times a second. The server sends back the player positions.
 </p>
 <p>
-	Finally, the <code>'disconnect'</code> call is done when a client closes the web page. Other clients remove the client from the scene after noticing that their connection status is zero.
+	Finally, the <code>'disconnect'</code> call is done when a client closes the web page. The server updates the connection status of the player. Other clients remove the player from the scene after noticing that the connection status is zero.
 </p>
 
 <h2>The client</h2>
 
 <p>
-	I tried to keep it simple but the client is around 200 lines. Hold on to your hats.
+	I tried to keep it simple but the client is around 200 lines. 
+	I'm gonna just copy paste the thing here without much explanation.
 </p>
 
 <pre><code>&lt;!DOCTYPE html&gt;

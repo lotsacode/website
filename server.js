@@ -32,8 +32,10 @@ jsons = jsons.filter(function(x) {
 	return config.released.contains(x.route);
 });
 
-// GET requests
+var request = require('request');
+var cheerio = require('cheerio');
 
+// GET requests
 app.get('/', function(req, res) {
 	console.log("Request from " + req.ip)
 	res.render("index.ejs", {lastPub: jsons[0].date, articles: jsons});
@@ -62,7 +64,6 @@ app.get('/post/*', function(req, res) {
 app.use('/static', express.static(__dirname + '/static'));
 
 // Start the server
-app.listen(9003, function() {
-	console.log('Index listening on port 9003.');
+app.listen(4991, function() {
+	console.log('Index listening on port 4991.');
 });
-

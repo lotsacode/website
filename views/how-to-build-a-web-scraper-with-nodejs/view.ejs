@@ -1,0 +1,264 @@
+<h1>How to build a web scraper with NodeJS</h1>
+
+<p>In this tutorial I will show you how to build a web scraper with server side Javascript. Web scrapers are programs that systematically browse the World Wide Web for the purpose of gathering data.</p>
+
+<h2>Dependencies</h2>
+<p>We're gonna use <a href="https://www.npmjs.com/package/request">request</a>, a library for sending http requests and <a href="https://github.com/cheeriojs/cheerio">cheerio</a>, a library for parsing http data with jQuery syntax. Install them with npm
+<pre><code>npm install request
+npm install cheerio
+</pre></code>
+<h2>Gathering links from a web page</h2>
+<p>Let's start off with something simple. This example makes a request to <a href="http://www.google.com">http://www.google.com</a> and prints out all the links in the webpage.</p>
+<pre><code>var request = require('request');
+var cheerio = require('cheerio');
+request('http://www.google.com', function (error, response, body) {
+  var $ = cheerio.load(body);			// Parse request body
+  var links = $('a').get();				// Find all &lt;a&gt;-elements
+  var hrefs = as.map(function(link) {	
+  	return $(link).attr("href");		// Get the URL
+  });
+  console.log(hrefs);
+});
+</code></pre>
+The output should look something like this
+
+<pre><code>
+[ 'https://www.google.fi/webhp?tab=ww',
+  'http://www.google.fi/imghp?hl=fi&tab=wi',
+  'http://maps.google.fi/maps?hl=fi&tab=wl',
+  'https://play.google.com/?hl=fi&tab=w8',
+  'http://www.youtube.com/?gl=FI&tab=w1',
+  'https://mail.google.com/mail/?tab=wm',
+  'https://drive.google.com/?tab=wo',
+  'https://www.google.com/calendar?tab=wc',
+  'https://www.google.fi/intl/fi/options/',
+  'http://translate.google.fi/?hl=fi&tab=wT',
+  'http://www.blogger.com/?tab=wj',
+  'https://photos.google.com/?tab=wq&pageId=none',
+  'https://docs.google.com/document/?usp=docs_alc',
+  'https://www.google.fi/intl/fi/options/',
+  'https://accounts.google.com/ServiceLogin?hl=fi&passive=true&continue=http://www.google.fi/%3Fgfe_rd%3Dcr%26ei%3D_WEBWd3NAaur8weDyJeIBA',
+  'http://www.google.fi/preferences?hl=fi',
+  '/preferences?hl=fi',
+  'http://www.google.fi/history/optout?hl=fi',
+  '/advanced_search?hl=fi&authuser=0',
+  '/language_tools?hl=fi&authuser=0',
+  '/url?q=http://www.google.fi/setprefs%3Fsig%3D0_bDNdlBQyBA4jKJJpZpgBzxQq3VY%253D%26hl%3Dsv%26source%3Dhomepage&sa=U&ved=0ahUKEwi7v8TL1cPTAhVkP5oKHRWiDKMQ2ZgBCAU&usg=AFQjCNEJr9F6IoWXw6XSNYSneOrIUgbCUQ',
+  '/intl/fi/ads/',
+  'http://www.google.fi/intl/fi/services/',
+  'https://plus.google.com/117762732769510714299',
+  '/intl/fi/about.html',
+  'http://www.google.fi/setprefdomain?prefdom=US&sig=__Qce9GiJN2L1lXggX7Tq7JtkYUP8%3D',
+  '/intl/fi/policies/privacy/',
+  '/intl/fi/policies/terms/' ]
+</code></pre>
+
+<h2>Automated visiting</h2>
+
+<p>
+	Typically you'd like the scraper to automatically find and visit thousands of web pages. 
+	A simple strategy would be to  make the program gather links under a base domain and recursively visit them. Something like this
+	<ol>
+		<li>Visit a domain, such as http://google.com</li>
+		<li>Find and store desired data, if any</li>
+		<li>Mark the URL as visited so it won't be visited again</li>
+		<li>Repeat step 1 for <b>each unmarked URL</b> found in the page</li>
+	</ol>
+	Unfortunately, that is not going to work. After a few iterations the program tries to do billions of HTTP requests. It blows up. 
+</p>
+<p>
+	How about this - make the program choose a random link under a domain and follow it (recursively). If the link leads to a page that has no links we're in trouble. This can be fixed by making the program go back when there's no more links to visit. Okay, the new strategy is to
+</p>
+
+	<ol>
+		<li>Visit a domain, such as http://google.com</li>
+		<li>Find and store desired data, if any</li>
+		<li>Mark the URL as visited so it won't be visited again</li>
+		<li>Repeat step 1 for a random unmarked link in the page. If all of the links are marked, <b>go back</b></li>
+	</ol>
+
+</code></pre>
+
+<h2>Here's a media scraper</h2>
+
+
+<p>	
+Okay, next up is a scraper that gathers images under a given domain with the above strategy. To implement backtracking you need to create a "linked list" data structure for the links. It contains the original link and a pointer to the link that found it.
+</p>
+
+<pre><code>var MediaScraper = function(baseDomain) {
+	
+	this.visits = 0; 		// Current amt of visits
+	this.limit = 10;		// Default upper limit for amt of visits
+	this.timeout = 10000; 	// Default timeout
+	this.delay = 100;		// Default delay 
+	this.visited = [];		// Array of visited pages
+	this.mediaLinks = [];   // Scraped media
+	this.done = false;		
+
+	// Linked list class for backtracking 
+	var Link = function(href, parent) {
+		this.href = href;
+		this.parent = parent;
+		if (this.parent == null) this.parent = this;
+	}
+
+	// Marks a page as visited
+	this.mark = function(href) {
+		this.visited.push(href);
+		this.visited.push(href + '/');
+	};
+
+	// Checks if a page is visited
+	this.marked = function(href) {
+		return this.visited.includes(href);
+	};
+
+	// Visit a page
+	this.visit = function(link) {
+		if (this.visits >= this.limit) {
+			if (!this.done) {
+				console.log("I found these:\n" + this.mediaLinks.join('\n'));
+			}
+			this.done = true;
+			return;
+		}
+		this.visits += 1;
+		this.mark(link.href);
+		console.log("Visiting " + link.href + " [" + this.visits + "/" + this.limit + "]");
+		var scraper = this;
+		request(link.href, {timeout: this.timeout}, function (error, response, body) {
+			if (error) {
+				console.log("Oops (" + error + "). Backtracking...");
+				scraper.visit(link.parent); 	
+				return;
+			}
+			var $ = cheerio.load(body);
+			// Gather media 
+			$('a').get().forEach(function(link) {
+				var href = $(link).attr("href");
+				if (href.startsWith('/')) href = baseDomain + href;
+				if (href && !scraper.mediaLinks.includes(href) && href.endsWith("jpg") || href.endsWith("png")) {
+					scraper.mediaLinks.push(href);
+				}
+			});
+			$('img').get().forEach(function(image) {
+				var src = $(image).attr("src");
+				if (src && src.startsWith('/')) src = baseDomain + src;
+				if (src && !scraper.mediaLinks.includes(src) && (src.endsWith("jpg") || src.endsWith("png"))) {
+					scraper.mediaLinks.push(src);
+				}
+			});
+			var links = $('a').get();
+			setTimeout(function(){
+				links = links.map(function(x) {
+					var href = $(x).attr("href");
+					if (href && href.startsWith('/')) href = baseDomain + href;
+					return href;
+				}).filter(function(x) {
+					return (x && x.startsWith(baseDomain) && !scraper.marked(x));
+				});
+				if (links.length == 0) {
+					// go back to parent
+					console.log("No unmarked links found. Backtracking...");
+					scraper.visit(link.parent);
+				} else {
+					// visit random one
+					var rnd = links[Math.floor(Math.random()*links.length)];
+					scraper.visit((new Link(rnd, link)));
+				}	
+			}, scraper.delay); // Wait for (delay/1000) seconds just to be nice
+		});
+	};
+
+	// Start the damn thing
+	this.go = function() {
+		this.visit(new Link(baseDomain));
+	};
+
+};
+
+new MediaScraper("http://www.lotsacode.tk").go();</code></pre>
+<p>Note: if you're getting <code>this.visited.includes is not a function</code> you should update nodejs to the latest version</p>
+<p>
+	There's lots of room for optimization and probably a bunch of bugs, but I tried to keep it relatively simple.
+	<b>Don't expect this to work flawlessly on all websites!</b>
+</p>
+<p>
+	Here's the output after going to http://www.9gag.com
+</p>
+<pre><code>Visiting http://www.9gag.com [1/10]
+Visiting http://www.9gag.com/gag/aebPZWQ [2/10]
+Visiting http://www.9gag.com/member/resend-confirmation [3/10]
+Visiting http://www.9gag.com/gag/aebPDdQ [4/10]
+Visiting http://www.9gag.com/gag/aRmNzyB [5/10]
+Visiting http://www.9gag.com/gag/a7r607x [6/10]
+Visiting http://www.9gag.com/read/delete?id=a7r607x [7/10]
+Visiting http://www.9gag.com/gag/a2rj27Z [8/10]
+Visiting http://www.9gag.com/gag/a6b3bVA [9/10]
+Visiting http://www.9gag.com/gag/amYbGAV [10/10]
+I found these:
+https://img-9gag-fun.9cache.com/photo/axVnPMM_460s.jpg
+https://miscmedia-9gag-fun.9cache.com/images/long-post-cover/36417453_1493699798.3952_UbUgEV_460c.jpg
+https://img-9gag-fun.9cache.com/photo/a2rj27Z_460s.jpg
+https://img-9gag-fun.9cache.com/photo/a6b3bVA_460s.jpg
+https://img-9gag-fun.9cache.com/photo/amYbGAV_460s.jpg
+https://img-9gag-fun.9cache.com/photo/a3qp0Rm_460s_v1.jpg
+https://img-9gag-fun.9cache.com/photo/aPBd9ZQ_460s.jpg
+https://img-9gag-fun.9cache.com/photo/aEYN2Bo_460s.jpg
+https://img-9gag-fun.9cache.com/photo/a2rjbME_460s.jpg
+https://img-9gag-fun.9cache.com/photo/aebPDdQ_460s.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1481536354.227_YsUzaZ_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1486539490.6365_EBAvAW_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1485940060.0919_EraBuz_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1486965738.2516_AREWuh_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1489648700.7516_eTyteZ_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1487665072.7395_udY4a4_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1484897957.5863_rUSaGe_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1484906556.1775_yhaSE5_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1485938697.4579_4Upy7U_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1480492149.9937_SuGene_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1487151742.7837_YvaDED_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1481538540.3927_umEzEP_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1481541097.3956_HanUhe_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1481537858.9056_aZAvYJ_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1465265912.1472_aDurYD_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1482203076.0883_u8yQU9_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1449833759.8316_zUNATY_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1465779419.894_jErUja_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1481525996.4198_aXYzE6_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1472001038.4195_uVUzYN_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1481541202.9406_avy9Uq_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1464856777.129_sAsYpE_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1481540748.1656_aVesEZ_n.jpg
+https://miscmedia-9gag-fun.9cache.com/images/thumbnail-facebook/1481541267.9381_qa8YWa_n.jpg
+https://img-9gag-fun.9cache.com/photo/aebPZWQ_700b_v2.jpg
+https://img-9gag-fun.9cache.com/photo/aRmNzyB_700b.jpg
+https://img-9gag-fun.9cache.com/photo/a7r607x_700b.jpg
+https://img-9gag-fun.9cache.com/photo/a6b3bVA_700b.jpg
+https://img-9gag-fun.9cache.com/photo/amYbGAV_700b.jpg
+</code></pre>
+
+<p>And to get a glimpse of some backtracking action, here's the result after visiting http://www.lotsacode.tk.
+</p>
+<pre><code>Visiting http://www.lotsacode.tk [1/10]
+Visiting http://www.lotsacode.tk/post/polygon-madness-is-here [2/10]
+Visiting http://www.lotsacode.tk/post/hello-world [3/10]
+No unmarked links found. Backtracking...
+Visiting http://www.lotsacode.tk/post/polygon-madness-is-here [4/10]
+No unmarked links found. Backtracking...
+Visiting http://www.lotsacode.tk [5/10]
+Visiting http://www.lotsacode.tk/post/creating-a-real-time-game-server-with-nodejs-and-socketio [6/10]
+Visiting http://www.lotsacode.tk/static/js/jquery-2.1.1.min.js [7/10]
+No unmarked links found. Backtracking...
+Visiting http://www.lotsacode.tk/post/creating-a-real-time-game-server-with-nodejs-and-socketio [8/10]
+Visiting http://www.lotsacode.tk/static/js/three.min.js [9/10]
+No unmarked links found. Backtracking...
+Visiting http://www.lotsacode.tk/post/creating-a-real-time-game-server-with-nodejs-and-socketio [10/10]
+No unmarked links found. Backtracking...
+I found these:
+http://www.lotsacode.tk/static/images/archive.png
+http://www.lotsacode.tk/static/images/videos.png
+http://www.lotsacode.tk/static/images/git.png
+http://www.lotsacode.tk/static/images/about.png
+</code></pre>

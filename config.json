@@ -7,6 +7,9 @@
     	"three-js-shader-tutorial-part2-normal-mapping-and-textures",
     	"three-js-shader-tutorial-part1-basic-example",
     	"heres-a-free-file-uploading-service",
-    	"creating-a-real-time-game-server-with-nodejs-and-socketio"
+    	"creating-a-real-time-game-server-with-nodejs-and-socketio",
+        "how-to-build-a-web-scraper-with-nodejs",
+        "how-to-create-user-authentication-with-node-js-and-mongo-db",
+        "how-to-implement-dragndrop-file-uploading-with-nodejs"
     ]
 }

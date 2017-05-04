@@ -1,0 +1,77 @@
+<h1>How to implement drag'n'drop file uploading with NodeJS</h1>
+
+<p>
+	In this tutorial we'll make a HTML widget where you can drag files to (or click to open the usual file browser). After that we'll look at how to send the file to a NodeJS web server. First off, here's the HTML elements. 
+</p>
+
+<pre><code>&lt;input type="file" id="file" style="display: none;"&gt;&lt;/input&gt;
+&lt;div id="dropzone"&gt;Drop files here or click to upload.&lt;/div&gt;
+</pre></code>
+
+<p>
+	The hidden input element is activated when you click the drop zone.
+</p>
+
+<h2>Catching and sending the file</h2>
+
+<p>Now we need to catch the file when the user chooses it or drags it to the div. I'm using jQuery so make sure to include it.</p>
+
+<pre><code>$("#dropzone").on("drop", function(e) {
+    e.preventDefault();
+    sendFile(e.originalEvent.dataTransfer.files[0])
+});
+
+$("#dropzone").on('dragover', function(e) {
+	e.preventDefault();
+});
+
+$("#dropzone").click(function(e) {
+	$("#file").click();
+});
+
+$("#file").change(function() {
+    sendFile(this.files[0]);
+});
+</code></pre>
+
+<p>For some reason the dragover event needs to be prevented for the drag'n'dropping to work.</p>
+
+<p>After we have the file we put it in a FormData-object and send it to the server with XMLHttpRequest.</p>
+
+<pre><code>function sendFile(file) {
+	var xhr = new XMLHttpRequest();
+	xhr.open("POST", '/upload', true);
+	var formData = new FormData();
+	formData.append("file", file);
+	xhr.send(formData);
+}
+</code></pre>
+
+<h2>Server side</h2>
+
+<p>
+	You can use <code>multiparty</code> to parse the request (you need to install it with npm).
+	The file should be automatically saved to the project's root directory.
+</p>
+
+<pre><code>var multiparty = require('multiparty');
+app.post("/upload", function(req, res) {
+	var form = new multiparty.Form({uploadDir: __dirname});
+    form.parse(req, function(err, fields, files) {
+    	console.log(files);
+    });
+});
+</pre></code>
+
+<h2>Bonus: Monitoring progress</h2>
+<p>To monitor the progress of the uploading, try this</p>
+
+<pre><code>xhr.onprogress = function(e) {
+	if (e.lengthComputable) {
+    	var percentComplete = (e.loaded / e.total)*100;  
+    	console.log(percentComplete);
+    } 
+};
+</pre></code>
+
+<p>That's all! I hope it works out for you.</p>

@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title><%=title%></title>
+        <title><%=title%> | www.lotsacode.tk</title>
         <link rel="shortcut icon" type="image/png" href="/static/images/favicon.png">
         <link rel="stylesheet" type="text/css" href="/static/css/paper.css">
         <link rel="stylesheet" href="/static/css/side.css"/>
-        <link rel="stylesheet" href="/static/js/hl/styles/atom-one-light.css">
+        <link rel="stylesheet" href="/static/js/hl/styles/agate.css">
         <script src="/static/js/hl/highlight.pack.js"></script>
         <script src="/static/js/jquery-2.1.1.min.js"></script>
         <script src="/static/js/three.min.js"></script>
@@ -26,12 +26,12 @@
       	<%- include(fileName) %>
         <div id="navigation">
           <div id="next">
-            <a href="<%=next.route%>">Next
-            <div id="next-link"><%=next.title%></div></a>
+            <h3>Next up</h3>
+            <a href="<%=next.route%>"><div id="next-link"><%=next.title%></div></a>
           </div>
           <div id="previous">
-            <a href="<%=previous.route%>">Previous
-            <div id="previous-link"><%=previous.title%></div></a>
+            <h3>Previously...</h3>
+            <a href="<%=previous.route%>"><div id="previous-link"><%=previous.title%></div></a>
           </div>
         </div>
         <div id="comments">

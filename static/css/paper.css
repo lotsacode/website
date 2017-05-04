@@ -1,19 +1,7 @@
 @font-face {
-  font-family: Adam;
-  src: url("../fonts/Adam.ttf");
+  font-family: Compre;
+  src: url("../fonts/Compre.otf");
 }
-
-@font-face {
-  font-family: TruenoLt;
-  src: url("../fonts/TruenoLt.otf");
-}
-
-
-@font-face {
-  font-family: LiberationMono-Regular;
-  src: url("../fonts/LiberationMono-Regular.ttf");
-}
-
 pre {
   tab-size: 4;
   -o-tab-size: 4; /* Code for Opera 10.6-12.1 */
@@ -25,24 +13,26 @@ body {
   background: rgba(0,0,0,0);
   color: #202020;
   font-family: sans-serif;
-  line-height: 24px;
 }
 
 a {
   text-decoration: none;
-  color: #2277CC;
+  color: #6060ff;
+  font-weight: bold;
   cursor: pointer;
 }
 
 h1, h2, h3, h4 {
   font-family: sans-serif;
+  color: #404040;
+  line-height: 34px;
 }
 
 h1 {
   font-size: 38px;
-  margin-top: 40px;
+  margin-top: 60px;
   margin-bottom: 20px;
-  line-height: 42px;
+  line-height: 48px;
 }
 
 h2 {
@@ -58,24 +48,39 @@ h4 {
   font-size: 20px;
 }
 
+#paper {
+  width: calc(78%)
+  min-width: 480px;
+  min-height: 680px;
+  padding-right: 20px;
+  margin-top: 0px;
+  margin-bottom: 40px;
+  margin-left: calc(22% + 50px);
+  max-width: 800px;
+}
+
+#paper img {
+  display: block;
+  margin: 0 auto;
+}
+
 .paper-date {
   height: 15px;
   margin-left: 0px;
-  color: #c0c0c0;
-  font-size: 14px;
+  color: rgba(0,0,0,0.4);
   position: absolute;
-  top: 15px;
+  top: 25px;
+  font-size: 18px;
+
 }
 
 code {
-  line-height: 16px;
-  font-size: 13px;
   border: 1px solid #e0e0e0;
-  border-radius: 4px;
   background: #fafafa;
-  padding-bottom: 2px;
-  padding-left: 4px;
-  padding-right: 4px;
+  font-size: 14px;
+  line-height: 18px;
+  padding: 0px 4px 2px 4px;
+
 }
 
 code > pre {
@@ -87,7 +92,6 @@ ul {
 
 canvas {
   border: 1px solid #e0e0e0;
-  border-radius: 4px;
 }
 
 .image-wrapper img {
@@ -95,21 +99,6 @@ canvas {
   margin: 0 auto;
 }
 
-#paper {
-  width: calc(75%)
-  min-width: 480px;
-  min-height: 680px;
-  padding-right: 20px;
-  margin-top: 0px;
-  margin-bottom: 40px;
-  margin-left: calc(25% + 40px);
-  max-width: 700px;
-}
-
-#paper img {
-  display: block;
-  margin: 0 auto;
-}
 
 .text {
   margin-bottom: 40px;
@@ -137,21 +126,25 @@ canvas {
   line-height: 18px;
 }
 
+#previous, #next {
+  width: 50%;
+  margin-bottom: 40px;
+}
+
+#previous h3, #next h3 {
+  color: rgba(0,0,0,0.7);
+  font-size: 18px;
+  margin-bottom: 0px;
+  margin-top: 10px;
+}
+
 #next {
   float: right;
   text-align: right;
-  font-weight: bold;
-  font-size: 14px;
-  width: 50%;
+  
 }
 
 #previous {
   float: left;
   width: 50%;
-  font-weight: bold;
-  font-size: 14px;
-}
-
-#next div, #previous div {
-  font-weight: normal;
 }

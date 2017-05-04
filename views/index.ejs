@@ -1,29 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Index</title>
+	<title>Archive | www.lotsacode.tk</title>
   <script src="/static/js/jquery-2.1.1.min.js"></script>
   <link rel="stylesheet" href="/static/css/index.css"/>
   <link rel="stylesheet" href="/static/css/side.css"/>
 </head>
 <body>
-<%- include("side.ejs") %>
-<div id="articles">
-  <% for(var i=0; i<articles.length; i++) {%>
-    <a href="/post/<%- articles[i].route %>">
-        <div class="article">
-          <div class="date"><%- articles[i].date %></div>
-          <div class="header"><%- articles[i].title %></div>
-        </div>
-    </a>
-    <hr>
-  <% } %>
-</div>
-<script>
-$(document).ready(function() {
-  
-});
-</script>
-
+  <%- include("side.ejs") %>
+  <div id="articles">
+    <% for(var i=0; i<articles.length; i++) {%>
+      <a href="/post/<%- articles[i].route %>">
+          <div class="article">
+            <div class="date"><%- articles[i].date %></div>
+            <div class="header"><h1><%- articles[i].title %></h1></div>
+          </div>
+      </a>
+    <% } %>
+  </div>
+  <script>
+    $(".article").mouseenter(function(){
+        $(this).css({ transform: 'scale(1.02)' });
+      });
+    $(".article").mouseleave(function(){
+      $(this).css({ transform: 'scale(1.0)' });
+    });
+  </script>
 </body>
 </html>
