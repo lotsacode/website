@@ -1,15 +1,14 @@
 <h1>Creating a real-time game server with NodeJS and Socket.io</h1>
 <p>In this tutorial I'll show you a simple SocketIO app and then a multiplayer "game" made with ThreeJS that looks like this</p>
 <iframe width="100%" height="400" src="https://www.youtube.com/embed/t7PgcueEKF4"></iframe>
-<p>	
-	SocketIO enables you to listen and stream data over the internet. It's perfect for network beginners, as it abstracts away all the nasty protocol stuff. <code>socket.on(...)</code> listens for data from clients and <code>socket.emit(...)</code> sends data to a connected client. You can pass arrays or objects and SocketIO will do all the dirty work for ya. 
+<p>
+	SocketIO enables you to listen and stream data over the internet. It's perfect for network beginners, as it abstracts away all the nasty protocol stuff. <code>socket.on(...)</code> listens for data from clients and <code>socket.emit(...)</code> sends data to a connected client. You can pass arrays or objects and SocketIO will do all the dirty work for ya.
 </p>
 
 <h2>Simple example</h2>
 
-
 <p>
-	I'm assuming that you're familiar with <a href="https://expressjs.com/">express</a>. It is used to create a web server running on port 9000. The socketIO data is sent to port 4000.
+	Here's a simple web app made with <a href="https://expressjs.com/">express</a> that creates a socket.io server running on port 4000. The client sends a message to port 4000 and the server responds with a message.
 </p>
 
 <pre><code>var http = require('http');
@@ -74,7 +73,7 @@ Here's the HTML client
 
 <h3>What's going on here?</h3>
 <p>
-	The client script sends a 'hello' message to <code>http://localhost:4000</code>. In a real-world situation this would be <code>http://myawesomewebsite.com:4000</code>. The message is sent over WebSockets - a protocol that enable the browser to send streams of messages on top of TCP. The server picks up the message and sends a response back to the client.
+	The client script sends a 'hello' message to <code>http://localhost:4000</code>. In a real-world situation this would be <code>http://myawesomewebsite.com:4000</code>. The message is sent over WebSockets - a protocol that enable the browser to send streams of messages on top of TCP.
 </p>
 
 <h3>Wait, why websockets?</h3>
@@ -91,7 +90,7 @@ Here's the HTML client
 <h2>The game server</h2>
 
 <p>
-	Now that we understand how Socket.io works, it's time to make a 3D scene where the clients can see eachother and move. 
+	Now that we understand how Socket.io works, it's time to make a 3D scene where the clients can see eachother and move.
 	Let's start with the web server code
 </p>
 <pre><code>var http = require('http');
@@ -132,7 +131,7 @@ var World = {
 </code></pre>
 
 <p>
-	Note that the players are stored inside an object instead of an array. I found objects more convenient but it's a matter of taste. 
+	Note that the players are stored inside an object instead of an array. I found objects more convenient but it's a matter of taste.
 	You can iterate over the object in the client side and access them with id's.
 	Now let's add the socketIO stuff.
 </p>
@@ -148,9 +147,9 @@ io.on('connection', function (socket) {
     // Listen for init call from client
     socket.on('init', function(data) {
         var newPlayer = {
-            id: socket.id, 
-            color: Math.floor(Math.random()*0xffffff), 
-            connected: 1, 
+            id: socket.id,
+            color: Math.floor(Math.random()*0xffffff),
+            connected: 1,
             x: 0, y: 5, z: 0
         }
         World.add(newPlayer);
@@ -162,7 +161,7 @@ io.on('connection', function (socket) {
     socket.on('update', function(data) {
         // log("update " + data.player.id);
         World.players[data.player.id] = data.player;
-        // Send player position to client 
+        // Send player position to client
         socket.emit('update', {players: World.players});
     });
 
@@ -171,24 +170,26 @@ io.on('connection', function (socket) {
         if (World.players[socket.id] != null) {
             log("disconnect " + socket.id)
             World.players[socket.id].connected = 0;
-        } 
+        }
     });
 
 });
 </code></pre>
-<p>The client calls <code>'init'</code> after loading the page. This causes the server to create a new player and send back player data. After that the client adds the new player to scene and starts drawing the game. The socket id is used to differentiate between other players. </p>
+<p>The client sends the <code>'init'</code>-message after loading the page. This causes the server to create a new player and send back player data. After that the client adds the new player to scene and starts drawing the game. The socket id is used to differentiate between other players. </p>
 <p>
-	The client calls <code>'update'</code> at each draw frame, usually around 60 times a second. The server sends back the player positions.
+	The client sends the <code>'update'</code>-message at a regular interval while drawing the game. This message contains player data. After receiving the message the server sends back the player positions. Note that you generally shouldn't send the updates at each draw frame as it's relatively expensive to do that. Doing so will
+	cause a large drop in FPS. You should instead make a separate interval with <code>setInterval</code>
+	that emits data to the server each 100ms or so.
 </p>
 <p>
-	Finally, the <code>'disconnect'</code> call is done when a client closes the web page. The server updates the connection status of the player. Other clients remove the player from the scene after noticing that the connection status is zero.
+	Finally, the <code>'disconnect'</code>-message is sent after a client closes the web page. The server updates the connection status of the player. Other clients remove the player from the scene after noticing that the connection status is zero. I noticed that my implementation is not completely foolproof. To be completely sure that a client disconnected you could try sending a "ping" message to the client at a regular interval - if there is no response the client has disconnected.
 </p>
 
 <h2>The client</h2>
 
 <p>
-	I tried to keep it simple but the client is around 200 lines. 
-	I'm gonna just copy paste the thing here without much explanation.
+	I tried to keep it simple but the client is around 200 lines. I'm gonna just copy paste the thing here without much explanation. It's a simple ThreeJS scene that draws a bunch of spheres that represent players.
+	
 </p>
 
 <pre><code>&lt;!DOCTYPE html&gt;
@@ -197,8 +198,8 @@ io.on('connection', function (socket) {
         &lt;meta charset="utf-8"&gt;
         &lt;title&gt;Socket.io&lt;/title&gt;
         &lt;style&gt;
-        	body, html { 
-        		width: 100%; height: 100%; padding: 0px; margin: 0px; 
+        	body, html {
+        		width: 100%; height: 100%; padding: 0px; margin: 0px;
         	}
         	#debug {
         		background: black;
@@ -229,16 +230,16 @@ io.on('connection', function (socket) {
 </code></pre>
 
 <p>
-	That's the base HTML. Don't forget to include <a href="https://cdnjs.com/libraries/socket.io">socket.io.js.</a>, 
-	<a href="/static/js/jquery-2.1.1.min.js">jquery</a> and 
-	<a href="/static/js/three.min.js">threejs</a> in your static folder. 
+	That's the base HTML. Don't forget to include <a href="https://cdnjs.com/libraries/socket.io">socket.io.js.</a>,
+	<a href="/static/js/jquery-2.1.1.min.js">jquery</a> and
+	<a href="/static/js/three.min.js">threejs</a> in your static folder.
 	Next is the game itself
 </p>
 <!--
 <p>Let's go through the networking stuff</p>
 
 <pre><code>// Network initialization
-var players = {};	
+var players = {};
 var clientId = null;	// socket/client id
 socket.emit('init');
 
@@ -246,9 +247,9 @@ socket.emit('init');
 socket.on('init', function(data) {
 	clientId = data.id;
 	var mat = material.clone();
-	mat.color.setHex(data.color); 
+	mat.color.setHex(data.color);
 	var mesh = new THREE.Mesh(
-		playerGeometry, 
+		playerGeometry,
 		mat
 	);
 	mesh.position.x = data.x;
@@ -264,12 +265,12 @@ socket.on('init', function(data) {
 
 
 <pre><code>// Update player data to server
-socket.emit('update', { 
+socket.emit('update', {
 	player: {
-		id: clientId, 
+		id: clientId,
 		color: players[clientId].mesh.material.color.getHex(),
 		connected: 1,
-		x: players[clientId].mesh.position.x, 
+		x: players[clientId].mesh.position.x,
 		y: players[clientId].mesh.position.y,
 		z: players[clientId].mesh.position.z
 	}
@@ -288,9 +289,9 @@ socket.on('update', function(data) {
 	});
 	keys.forEach(function(key) {
 		var player = data.players[key];
-		$("#debug").append("<p>id=" + player.id + ", x=" + 
-			player.x.toFixed(2) + ", y=" + 
-			player.y.toFixed(2) + ", z=" + 
+		$("#debug").append("<p>id=" + player.id + ", x=" +
+			player.x.toFixed(2) + ", y=" +
+			player.y.toFixed(2) + ", z=" +
 			player.z.toFixed(2) + ", conn=" +
 			player.connected +  ", color=" +
 			'0x' + player.color.toString(16) + "</p>"
@@ -319,13 +320,13 @@ socket.on('update', function(data) {
 -->
 
 <pre><code>// Network variables
-var players = {};	
+var players = {};
 var clientId = null;	// socket/client id
 
 // Set up the scene
-var t = 0;			
+var t = 0;
 var dt = 0.001;
-var moving = false;		
+var moving = false;
 var angle = -Math.PI/2; // direction of movement
 var socket = io('http://localhost:4000');
 var scene = new THREE.Scene();
@@ -340,9 +341,9 @@ renderer.setSize( width, height );
 document.getElementById("webgl").appendChild( renderer.domElement );
 var playerGeometry = new THREE.SphereGeometry(2.0, 64, 64);
 var material = new THREE.MeshBasicMaterial({
-    color: Math.random() * 0xffffff 
-});	
-var fg = new THREE.PlaneGeometry(1280, 1280, 64, 64); 
+    color: Math.random() * 0xffffff
+});
+var fg = new THREE.PlaneGeometry(1280, 1280, 64, 64);
 var fm = new THREE.MeshBasicMaterial({
     color: 0x2F0fff,
     wireframe: true
@@ -351,20 +352,20 @@ var floor = new THREE.Mesh(fg, fm);
 scene.add(floor);
 floor.rotation.x = -Math.PI/2;
 floor.position.y -= 0.5;
-// Starfield just for the heck of it	
+// Starfield just for the heck of it
 var starField = new THREE.Geometry();
 for (var i = 0; i < 1000; i++) {
 	starField.vertices.push(new THREE.Vector3(
-		(Math.random()-Math.random())*400, 
-		Math.random()*100, 
+		(Math.random()-Math.random())*400,
+		Math.random()*100,
 		(Math.random()-Math.random())*400));
 }
 scene.add(new THREE.Points(starField, new THREE.PointsMaterial( { color: 0xffff88, size: 0.4 } )))
 
-// Render the scene 
+// Render the scene
 function render() {
     requestAnimationFrame( render );
-    renderer.render( scene, camera );     
+    renderer.render( scene, camera );
     if (clientId == null) return;
     t += dt;
     // Player movement
@@ -380,12 +381,12 @@ function render() {
         players[clientId].mesh.rotation.y = camera.rotation.y;
     }
 	// Update the player's position to server
-    socket.emit('update', { 
+    socket.emit('update', {
     	player: {
-    		id: clientId, 
+    		id: clientId,
     		color: players[clientId].mesh.material.color.getHex(),
     		connected: 1,
-    		x: players[clientId].mesh.position.x, 
+    		x: players[clientId].mesh.position.x,
     		y: players[clientId].mesh.position.y,
     		z: players[clientId].mesh.position.z
     	}
@@ -395,7 +396,7 @@ function render() {
 
 // Mouse events
 $("body").mouseup(function(e) {
-	moving = false;	
+	moving = false;
 });
 $("body").mousedown(function(e) {
 	moving = true;
@@ -412,9 +413,9 @@ socket.emit('init');
 socket.on('init', function(data) {
 	clientId = data.id;
 	var mat = material.clone();
-	mat.color.setHex(data.color); 
+	mat.color.setHex(data.color);
 	var mesh = new THREE.Mesh(
-		playerGeometry, 
+		playerGeometry,
 		mat
 	);
 	mesh.position.x = data.x;
@@ -433,9 +434,9 @@ socket.on('update', function(data) {
 	});
 	keys.forEach(function(key) {
 		var player = data.players[key];
-		$("#debug").append("&lt;p&gt;id=" + player.id + ", x=" + 
-			player.x.toFixed(2) + ", y=" + 
-			player.y.toFixed(2) + ", z=" + 
+		$("#debug").append("&lt;p&gt;id=" + player.id + ", x=" +
+			player.x.toFixed(2) + ", y=" +
+			player.y.toFixed(2) + ", z=" +
 			player.z.toFixed(2) + ", conn=" +
 			player.connected +  ", color=" +
 			'0x' + player.color.toString(16) + "&lt;/p&gt;"
@@ -466,4 +467,5 @@ render();
 </code></pre>
 
 
-<p>That's all folks! The code is in github, you can copy it from <a href="https://github.com/lotsacode/socket-io-game-server-example">here</a>.</p>
+
+<p>That's all folks! The code is in github, you can copy it from <a href="https://github.com/lotsacode/socket-io-game-server-example">here</a>. I'm in the process of extending this example to make a full fledged game. I will add some additional tips and corrections here as I develop it.</p>

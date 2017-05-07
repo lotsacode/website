@@ -3,18 +3,19 @@
 	Let's make a simple login/register page with NodeJS and MongoDB! 
 	I'm just gonna copy paste the JS/HTML5 here without much explanation. Here's the things we'll use
 	<ul>
-		<li>MongoDB and NodeJS</li>
-		<li>Express, templating with EJS</li>
-		<li>jQuery</li>
+		<li>MongoDB to store registered users</li>
+		<li>Web server with NodeJS, Express, templating with EJS</li>
+		<li>express-session to keep track of the logged in user</li>
+		<li>jQuery stuff in the front-end</li>
 	</ul>
 </p>
 <p>Here's the end result</p>
 <iframe width="100%" height="400" src="http://youtube.com/embed/z6tMRxGG6Ss"></iframe>
 <p>Download MongoDB from <a href="https://www.mongodb.com/">here</a>. To start it with windows, navigate to the installation directory and run <code>./bin/mongod.exe</code>. 
-The data is stored by default at <code>X:/data</code>. Not sure about Linux/OSX but the setup should be similiar. Install the server side dependencies with npm <code>npm install mongodb express express-session ejs</code>.</p>
+The data is stored by default at <code>X:/data</code>. Not sure about Linux/OSX but the setup should be similiar. A nice thing about MongoDB is that once the executable is running you're all done, no further configuration needed. Install the server side dependencies with npm <code>npm install mongodb express express-session ejs</code>.</p>
 <h2>The server</h2>
 <pre><code>const MongoClient = require('mongodb').MongoClient;
-MongoClient.connect('mongodb://localhost:27017/todo', function(err, db) {
+MongoClient.connect('mongodb://localhost:27017/mydb', function(err, db) {
 
 	if (err) return console.log(err);
 	var express = require('express');
@@ -90,8 +91,10 @@ MongoClient.connect('mongodb://localhost:27017/todo', function(err, db) {
 });
 </code></pre>
 <p>
-	A couple notes. Session data is unique for each client so we can safely store the user object to <code>req.session</code>. 
-	In a real world situation you'd want to use HTTPS to prevent anyone from stealing credentials on their way to the server.
+	It's a basic setup with POST-requests for register, login and signout. A couple notes. Session data is unique for each client so we can safely store the user object to <code>req.session</code> and pass it down to the client. Another nice thing about MongoDB that it dynamically creates a collection if it doesn't exist.
+</p>
+<p>
+	In a real world situation it's important to use HTTPS to prevent anyone from stealing credentials on their way to the server.
 	I haven't tested the server for security issues, so use at your own risk.
 </p>
 <h2>The HTML</h2>
@@ -312,4 +315,4 @@ $(document).ready(function() {
 &lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
-<p>That is all! I included sanity checks in both client- and server side (except for the email). It's important to check things at the server since it's possible to bypass them in the client side.</p>
+<p>That is all! I included sanity checks in both client- and server side (except for the email). It's way more important to check things at the server since it's possible to bypass them in the client side.</p>

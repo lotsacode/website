@@ -48,7 +48,8 @@ a {
 	height: 100%;
 	margin-left: calc(22% + 5px);
 	color: #404040;
-	font-size: 10px;
+	font-size: 14px;
+	line-height: 32px;
 }
 
 .article {
@@ -56,7 +57,7 @@ a {
 	background: #ffffff;
 	float: left;
 	clear: left;
-	margin-top: 10px;
+	margin-top: 5px;
 	border-radius: 5px;
 }
 

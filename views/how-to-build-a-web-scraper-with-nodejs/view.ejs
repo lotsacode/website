@@ -14,7 +14,7 @@ var cheerio = require('cheerio');
 request('http://www.google.com', function (error, response, body) {
   var $ = cheerio.load(body);			// Parse request body
   var links = $('a').get();				// Find all &lt;a&gt;-elements
-  var hrefs = as.map(function(link) {	
+  var hrefs = as.map(function(link) {
   	return $(link).attr("href");		// Get the URL
   });
   console.log(hrefs);
@@ -53,10 +53,31 @@ The output should look something like this
   '/intl/fi/policies/terms/' ]
 </code></pre>
 
+<h2>A note on options and user agent</h2>
+<p>
+  If you run your scraper without an user agent, some web pages will not like you
+  and redirect you to an empty page.
+  To configure the request, try something like this
+</p>
+<pre><code>var options = {
+  url: "http://myurl.com",
+  method: 'GET',
+  headers: {
+      'Accept': 'application/json',
+      'Accept-Charset': 'utf-8',
+      'User-Agent': 'my computer'
+  },
+  timeout: 10000
+};
+request(options, function (error, response, body) {
+  ...
+});</code></pre>
+<p>Full list of options can be seen <a href="https://github.com/request/request#requestoptions-callback">here</a>.</p>
+
 <h2>Automated visiting</h2>
 
 <p>
-	Typically you'd like the scraper to automatically find and visit thousands of web pages. 
+	Typically you'd like the scraper to automatically find and visit thousands of web pages.
 	A simple strategy would be to  make the program gather links under a base domain and recursively visit them. Something like this
 	<ol>
 		<li>Visit a domain, such as http://google.com</li>
@@ -64,7 +85,7 @@ The output should look something like this
 		<li>Mark the URL as visited so it won't be visited again</li>
 		<li>Repeat step 1 for <b>each unmarked URL</b> found in the page</li>
 	</ol>
-	Unfortunately, that is not going to work. After a few iterations the program tries to do billions of HTTP requests. It blows up. 
+	Unfortunately, that is not going to work. After a few iterations the program tries to do billions of HTTP requests. It blows up.
 </p>
 <p>
 	How about this - make the program choose a random link under a domain and follow it (recursively). If the link leads to a page that has no links we're in trouble. This can be fixed by making the program go back when there's no more links to visit. Okay, the new strategy is to
@@ -82,21 +103,21 @@ The output should look something like this
 <h2>Here's a media scraper</h2>
 
 
-<p>	
+<p>
 Okay, next up is a scraper that gathers images under a given domain with the above strategy. To implement backtracking you need to create a "linked list" data structure for the links. It contains the original link and a pointer to the link that found it.
 </p>
 
 <pre><code>var MediaScraper = function(baseDomain) {
-	
+
 	this.visits = 0; 		// Current amt of visits
 	this.limit = 10;		// Default upper limit for amt of visits
 	this.timeout = 10000; 	// Default timeout
-	this.delay = 100;		// Default delay 
+	this.delay = 100;		// Default delay
 	this.visited = [];		// Array of visited pages
 	this.mediaLinks = [];   // Scraped media
-	this.done = false;		
+	this.done = false;
 
-	// Linked list class for backtracking 
+	// Linked list class for backtracking
 	var Link = function(href, parent) {
 		this.href = href;
 		this.parent = parent;
@@ -130,11 +151,11 @@ Okay, next up is a scraper that gathers images under a given domain with the abo
 		request(link.href, {timeout: this.timeout}, function (error, response, body) {
 			if (error) {
 				console.log("Oops (" + error + "). Backtracking...");
-				scraper.visit(link.parent); 	
+				scraper.visit(link.parent);
 				return;
 			}
 			var $ = cheerio.load(body);
-			// Gather media 
+			// Gather media
 			$('a').get().forEach(function(link) {
 				var href = $(link).attr("href");
 				if (href.startsWith('/')) href = baseDomain + href;
@@ -166,7 +187,7 @@ Okay, next up is a scraper that gathers images under a given domain with the abo
 					// visit random one
 					var rnd = links[Math.floor(Math.random()*links.length)];
 					scraper.visit((new Link(rnd, link)));
-				}	
+				}
 			}, scraper.delay); // Wait for (delay/1000) seconds just to be nice
 		});
 	};
@@ -181,7 +202,7 @@ Okay, next up is a scraper that gathers images under a given domain with the abo
 new MediaScraper("http://www.lotsacode.tk").go();</code></pre>
 <p>Note: if you're getting <code>this.visited.includes is not a function</code> you should update nodejs to the latest version</p>
 <p>
-	There's lots of room for optimization and probably a bunch of bugs, but I tried to keep it relatively simple.
+	There's lots of room for optimization and probably a bunch of bugs, but I tried to keep it relatively simple. I hope it gives you a general idea.
 	<b>Don't expect this to work flawlessly on all websites!</b>
 </p>
 <p>
@@ -262,3 +283,4 @@ http://www.lotsacode.tk/static/images/videos.png
 http://www.lotsacode.tk/static/images/git.png
 http://www.lotsacode.tk/static/images/about.png
 </code></pre>
+<p>That's all folks. I'm currently extending this to create a scraping app. Will add any further notes (and corrections) once it's done!</p>
