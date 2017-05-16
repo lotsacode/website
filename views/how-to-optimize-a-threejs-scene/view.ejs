@@ -75,13 +75,13 @@ render();
 	The first step is to define an array of materials, for example
 </p>
 <pre><code>var materials = [
-	new THREE.MeshPhongMaterial({color: 0xff0000}), 
+	new THREE.MeshPhongMaterial({color: 0xff0000}),
 	new THREE.MeshPhongMaterial({color: 0x00ff00}),
 	new THREE.MeshPhongMaterial({color: 0x0000ff})
 ]
 </code></pre>
 <p>
-	Each face of a geometry has a property called <code>materialIndex</code>. 
+	Each face of a geometry has a property called <code>materialIndex</code>.
 	This indicates which material of the array is used. All we need to do is set this index as we like and create a <code>new THREE.MultiMaterial(materials)</code>.
 </p>
 <p>
@@ -92,7 +92,7 @@ for (var i = 0; i < 1000; i++) {
 	var g = new THREE.BoxGeometry(1, 1, 1);
 	var index = Math.floor(Math.random()*3) // Random index between 0 and 2.
 	for (var j = 0; j < g.faces.length; j++) {
-		g.faces[j].materialIndex = index; 
+		g.faces[j].materialIndex = index;
 	}
 	geometry.mergeMesh(new THREE.Mesh(g));
 }
@@ -119,8 +119,8 @@ function init2() {
 	var material = new THREE.MeshPhongMaterial({color: 0xFF0000});
 	var g = new THREE.Geometry();
 	var materials = [
-	    new THREE.MeshPhongMaterial({color: 0xff0000}), 
-	    new THREE.MeshPhongMaterial({color: 0x00ff00}), 
+	    new THREE.MeshPhongMaterial({color: 0xff0000}),
+	    new THREE.MeshPhongMaterial({color: 0x00ff00}),
 	    new THREE.MeshPhongMaterial({color: 0x0000ff})
 	];
 	for (var i = 0; i < 1000; i++) {
@@ -153,7 +153,7 @@ render2();
 <p>
 	A common thing in games is to have entities that move. To implement this, you should store the index of the first vertex and the total amount of vertices inside each entity.
 </p>
-<pre><code>// ... Entity class	
+<pre><code>// ... Entity class
 this.addToGeometry = function() {
 	this.index = geometry.vertices.length;
 	geometry.mergeMesh(this.mesh);
@@ -170,4 +170,3 @@ for (var i = 0; i < this.mesh.vertices.length; i++) {
 	A thing about geometries is that you can't add vertices while rendering, only change their position.
 	The general strategy is to allocate all the possible vertices/faces right from the start, and then hide the vertices/faces that you don't want to see just yet. Set their position to the abyss (or behind the camera) and move them back when needed. Same thing applies for deletion.
 </p>
-

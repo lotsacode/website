@@ -1,0 +1,155 @@
+<h1>10 tips for getting the most out of Atom text editor (in Windows)</h1>
+<p>
+	<a href="https://atom.io/">Atom</a> is a relatively new text editor released in 2015.
+	It's known to have some memory problems but it's open source and actively developed.
+	I switched over to Atom as I got tired of Sublime's buggy find-and-replace and was too lazy to learn Vim.
+	Like with all text editors, to maximize your productivity you gotta get familiar with the core features.
+</p>
+
+<h2>1. Moving and manipulating text</h2>
+<p>To delete a word starting from the cursor, try <code>Alt+Backspace</code>. I used to spam backspace for all deletions, this is pretty convenient!
+<p><video src="/static/images/atom/del2.webm" autoplay="true" loop="true" muted="true"></video></p>
+<p><code>Ctrl+Backspace</code> does almost the same thing except it deletes spaces aswell.</p>
+<p>Same principle applies for moving the cursor, <code>Alt+Left/Right</code> and <code>Ctrl+Left/Right</code>.
+<p>To move a swap a line with the one below it or above, try <code>Ctrl+Up/Down</code>.
+<p><video src="/static/images/atom/swap.webm" autoplay="true" loop="true" muted="true"></video></p>
+
+<h2>2. Multi-selection</h2>
+<p>Since I learned about multi-selecting in Sublime I could never live without it.
+	Atom supports it too, all you gotta do is <code>Ctrl+click</code> and you spawn a new cursor.</p>
+	<p><video src="/static/images/atom/multi.webm" autoplay="true" loop="true" muted="true"></video></p>
+	<p>You can multi-select with arrow keys too. The default is <code>Ctrl+Alt+Up/Down</code>.
+		However, in Windows the command is reserved to flip your screen.
+		Changing it to <code>Ctrl+Shift+Up/Down</code> works for me.
+	</p>
+
+<h2>3. Changing keybinds</h2>
+<p>
+	Changing keybinds should be more or less trivial but Atom made it extra confusing.
+	You can search for keybinds at <code>File -> Settings -> Keybinds</code>.
+	When you find a command you'd like to rebind, copy the command and go to <code>File -> Keymap</code>.
+	Now you need to add a new entry with the following syntax
+</p>
+<pre><code>'selector':
+	'key1': 'command1'
+	'key2': 'command2'
+	'key3': 'command3'
+</code></pre>
+
+<p>And that's it, it should work after saving the file.
+The selectors are CSS-selectors. You can inspect the selector of any component in dev mode
+<code>View -> Developer -> Toggle developer mode</code>. Use <code>body</code> if in doubt.
+Here's the previously mentioned bind for multi-selection with arrow keys</p>
+<pre><code>'body':
+  'ctrl-shift-up': 'editor:add-selection-above'
+  'ctrl-shift-down': 'editor:add-selection-below'
+</pre></code>
+<p>
+	Note that something like this will throw an error
+</p>
+<pre><code>'body':
+  	'key1': 'command1'
+'body':
+	'key2': 'command2'
+</pre></code>
+Instead you should include a selector only once.
+
+<h2>4. Moving around</h2>
+	<p>When your stack trace shows a line number for an error, you can navigate to it by pressing <code>Ctrl+G</code>
+	and entering the line number.</p>
+	<p>You can navigate the tabs just like in the browser with <code>Ctrl+Tab</code> or <code>CTRL+Shift+Tab</code>.
+	To view a specific tab, you can do <code>Alt+1</code>, <code>Alt+2</code>, etc.</p>
+
+<h2>5. Find and replace</h2>
+<p>
+	To open Atom's find-and-replace tool, press <code>Ctrl+F</code>. You can close it with <code>Esc</code>.
+	Switch between the buffers with <code>Tab</code>.
+	When you find something and press <code>Alt+Enter</code>, Atoms multi-selects all the occurences. That's pretty cool!
+	<p><video src="/static/images/atom/find.webm" autoplay="true" loop="true" muted="true"></video></p>
+	To confirm the replace buffer, press <code>Ctrl+Enter</code>.
+</p>
+<p>
+	At the right side you have options for matching regexp, case, selection and words.
+	The regexp option uses Javascript's regex syntax and it's too broad to cover here.
+	Read about regexp <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions">here</a>.
+	Here's an example of the magical powers you gain after learning regexp.
+	<p><video src="/static/images/atom/magic.webm" autoplay="true" loop="true" muted="true"></video></p>
+	Short explanation: "\S" matches a single character other than whitespace and "+" means 1 or more times.
+</p>
+
+<h2>6. Rows and columns</h2>
+<p>Atom can split the text editor to rows and columns.
+ To spawn a new row column, try <code>Ctrl+K</code> and press <code>Left/Right/Up/Down</code>.
+ To close a selected row or column, do <code>Ctrl+W</code>.
+</p>
+
+<h2>7. Snippets</h2>
+<p>
+	Atom comes with snippets that allow you to enter a prefix in the editor and hit tab or enter to expand it.
+	You can add your own snippets too, in <code>File -> Snippets</code>.
+	<p><video src="/static/images/atom/snippets.webm" autoplay="true" loop="true" muted="true"></video></p>
+	The available snippets are sensitive to the current language being used, you can switch it in the bottom right corner.
+</p>
+
+<h2>8. Disable spell checking</h2>
+<p>
+	That red stuff under your text gets pretty annoying after a while, especially if you're not writing english.
+	It's enabled by default, to disable it go over to Settings -> Packages, search for spell-check and click Disable.
+</p>
+<p>
+	<img src="/static/images/atom/red-stuff.png"/>
+</p>
+
+<h2>9. Community packages</h2>
+<p>
+There's a plethora of useful community packages around. You can look at them <a href="https://atom.io/packages">here</a> and install them from
+the command line with
+</p>
+<code>apm install package-name</code>
+<p>
+	apm wasn't in my PATH for some reason, adding <code>C:\Users\username\AppData\Local\atom\bin</code> to PATH solved the issue for me.
+</p>
+<p>Here's a couple must-haves</p>
+<ul>
+	<li><a href="https://atom.io/packages/file-icons">file-icons</a> A big pile of extension icons for the file browser (and tabs).</li>
+	<li><a href="https://atom.io/packages/minimap">minimap</a> A minimap of your source code, just like in Sublime.</li>
+</ul>
+
+<h2>10. Build example</h2>
+<p>
+	Custom builds are not included in Atom by default.
+	Let's install <code>build</code>, a tool for building you projects inside Atom and use it to build a simple C project with gcc.
+</p>
+<p><code>apm install busy build</code></p>
+<p>
+	Create a new directory and open it with <code>File -> Open folder</code>.
+	Add the following snippet to the root folder as <code>.atom-build.js</code>
+</p>
+<pre><code>module.exports = {
+  cmd: "gcc -Wall program.c -o program && program.exe",
+  preBuild: function () {
+    console.log('This is run **before** the build command');
+  },
+  postBuild: function () {
+    console.log('This is run **after** the build command');
+  },
+  functionMatch: function (terminal_output) {return [];}
+};
+</code></pre>
+<p>
+	<code>preBuild</code>, <code>postBuild</code> and <code>functionMatch</code> don't really do anything here, it compiles without them
+	but I included them to get rid of an error icon. Read more about the build file
+	<a href="https://atom.io/packages/build">here</a>.</p>
+</p>
+Here's the C program, <code>program.c</code>
+<pre><code>#include &lt;stdio.h&gt;
+int main() {
+  printf("Hello world!");
+}
+</code></pre>
+	And here's what happens after pressing <code>Ctrl+Alt+B</code> in Atom
+</p>
+<p>
+	<img src="/static/images/atom/build.jpg"/>
+</p>
+<p>That's all folks!</p>
