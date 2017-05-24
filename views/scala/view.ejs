@@ -1,0 +1,211 @@
+<h1>Demystifying advanced features of Scala</h1>
+<p>
+	Scala is a powerful language when used right, but when used right Scala can get very daunting to read.
+	In this article I'm going to demystify some syntactic monsters and advanced features
+	that make you say "Screw this, I'm going back to Java".
+	If you're looking for something more comprehensive, head over to the
+	<a href="http://docs.scala-lang.org/tutorials/">official scala tutorials</a>.
+</p>
+
+<h2>Scala's class system</h2>
+<p>Along with the good old <code class="Scala">class</code> and <code class="Scala">object</code>, scala comes with <code class="Scala">abstract class</code>,
+	<code class="Scala">case class</code> and <code class="Scala">trait</code> and a <code class="Scala">with</code>-keyword
+to mix traits with other classes.</p>
+<p>Abstract classes are pretty self-explanatory - they cannot be instantiated and can implement abstract methods.
+Example:</p>
+<pre><code class="Scala">abstract class Animal {
+	def noise: String
+	def speak: Unit = println(noise)
+}
+class Dog extends Animal {
+	def noise = "Bark" // Required method
+}
+new Dog().speak
+// Output: Bark
+</code></pre>
+<p>
+	Traits function similiarly to abstract classes. You can extend classes from them but they cannot have parameters.
+	Traits can be combined with classes and class instances for modularity
+</p>
+<pre><code class="Scala">trait Loud extends Animal {
+	abstract override def noise = super.noise + "!"
+}
+val dog = new Dog() with Loud
+dog.speak
+// Output: Bark!
+</code></pre>
+<p>Here I used the <code>abstract override</code> -keyword to replace the default noise.
+<p>
+	A case class can be thought of as a wrapper to an ordinary class that provides some additional features.
+</p>
+<p>
+	<ul>
+		<li>You don't need to use the <code class="Scala">new</code> keyword when instantiating</li>
+		<li>The parameters are automatically added as public fields</li>
+		<li>Convenient pattern matching</li>
+		<li>Abstract case classes are not possible</li>
+	</ul>
+</p>
+<p>Here's an example of two case classes and pattern matching</p>
+<pre><code class="Scala">abstract class Animal
+case class Dog(name: String, age: Int) extends Animal
+case class Bear(name: String, age: Int) extends Animal
+def reactTo(animal: Animal) {
+	animal match {
+		case Dog(name, _) => println(name + " is a good boy.")
+		case Bear(_, age) if (age > 3) => println("Help me Jesus.")
+		case _ => println("That's a baby bear.")
+	}
+}
+</code></pre>
+<p>As you can see, the underscore (_) can be used as shorthand for arguments that don't need to be referenced.
+<code>case _ => ...</code> matches everything not matched above.</p>
+<h2>Type parameters and variances</h2>
+<p>
+	In Scala you can declare type parameters to methods and classes.
+	They are passed inside brackets and you can restrict the class they inherit from with <code class="Scala">&lt;:</code>
+</p>
+<pre><code class="Scala">class Shelter[A <: Animal] {
+	var inhabitants = Vector[A]()
+	def add(animal: A) = {
+	  inhabitants = inhabitants :+ animal
+	}
+}
+val dogShelter = new Shelter[Dog];
+</code></pre>
+<p>
+	Likewise you can restrict the type to be a superclass of something with <code>&gt;:</code>.
+</p>
+<p>
+	You can put plus- and minus signs in front of the type to propagate
+	the parent-child relationship (<code>+T</code> and <code>-T</code>). Let me explain this further.
+	<code>Q[+T]</code> means that if <code>A</code> inherits from <code>B</code>, then <code>Q[A]</code> inherits from <code>Q[B]</code>.
+	Similiarly <code>Q[-T]</code> means that if <code>A</code> inherits from <code>B</code>, then <code>Q[B]</code> inherits from <code>Q[A]</code>.
+
+</p>
+
+<h2>Implicit variables and parameters</h2>
+<p>
+	Implicit variables are like globals, but not really.
+	Let's look at a simple example.
+</p>
+<pre><code class="Scala">def print(implicit x: String) = println(x)
+implicit val y = "Hello there!"
+print
+// Output: Hello there!
+</code></pre>
+<p>
+	When the implicit-keyword is used in front of a function argument, the compiler looks for an implicit variable in the scope.
+	If such a variable exists it is used as the default argument.
+</p>
+<p>
+	If you declare another implicit variable with the same type your code will not compile, because the compiler doesn't know which one to choose.
+</p>
+<pre><code class="Scala">def print(implicit x: String) = println(x)
+implicit val y = "Hello there!"
+implicit val z = "Hello again!"
+print
+// Does not compile
+</code></pre>
+<p>Implicit variables can clean up your code but unless you know what you're doing it's better to state things explicitly.</p>
+<h2>Implicit classes</h2>
+<p>Implicit classes can be used as a convenient way of extending a class without modifying it.</p>
+<pre><code class="Scala">implicit class ExtendedString(s: String) {
+	def shift: String = s.drop(1) + s(0)
+}
+println("aBanan".shift)
+// Output: Banana
+</code></pre>
+<p>So how did the string learn to shift?
+	The Scala compiler didn't find a a shift-method from the ordinary String class,
+	so it looked at the list of implicit classes that are derived from a String and found ExtendedString.</p>
+<h2>Call-by-name arguments</h2>
+
+<p>Passing an argument of type <code class="Scala"> => T</code> stands for <i>call-by-name</i>.
+	It means that you can pass any block of code as an argument as long as it returns a value of type <code class="Scala">T</code>.
+	Here's a classic application that measures the amount of time it takes to execute a block of code
+</p>
+<pre><code class="java">def time[T](block: => T) = {
+	val t0 = System.nanoTime()
+	block // execute the code
+	val t1 = System.nanoTime()
+	println("Elapsed time: " + (t1 - t0)/1000000 + "ms")
+}
+time {
+	doStuff()
+}
+// Output: Elapsed time: 12ms
+</code></pre>
+
+<p>
+	Notice that <code class="Scala">time</code> is called without explicitly declaring the type argument. Scala automatically chooses the type that the block happens to return.
+</p>
+
+<h2>Multiple parameter lists</h2>
+<p>Sometimes you see a function that has multiple parameter lists. Example:</p>
+<pre><code>def mod(n: Int)(x: Int) = (x % n)</code></pre>
+<p>So what's the point? Why not just do</p>
+<pre><code>def mod(n: Int, x: Int) = (x % n)</code></pre>
+<p>
+	When you call the first example with the first parameter only, it returns a function <code>Int => Int</code>.
+	This enables you to do something like this, for example
+</p>
+<pre><code>val parities = (1 to 100) map { x => mod(2)(x) }</code></pre>
+<h2>Futures</h2>
+<p>
+	Futures are designed for executing code outside the main thread.
+	One usage case would be sending a request to a remote server.
+	There's no guarantee how much it takes to receive a response
+	so you'd generally like to do something else while waiting for it.
+</p>
+<pre><code class="Scala">import concurrent.Future
+import concurrent.ExecutionContext.Implicits.global
+def sendRequest: String = {
+	Thread.sleep(1000)
+	"Hello from remote server."
+}
+val f = Future[String] { sendRequest }
+f.onSuccess{ case s => println(s) }
+while (!f.isCompleted) {
+	println("Don't mind me, just waiting for the response.")
+	Thread.sleep(200)
+}
+</code></pre>
+Output:
+<pre><code class="Scala">Don't mind me, just waiting for the response.
+Don't mind me, just waiting for the response.
+Don't mind me, just waiting for the response.
+Don't mind me, just waiting for the response.
+Don't mind me, just waiting for the response.
+Hello from remote server.
+</code></pre>
+
+<h2>Collections</h2>
+<p>
+	Scala ships with an overwhelming amount of collections.
+	The key thing in choosing the right one is the <a href="http://docs.scala-lang.org/overviews/collections/performance-characteristics.html">performance of operations</a>.
+	The article I linked explains the performance of each collection well. Generally you want to choose constant-time operations, followed by log-time, followed by linear-time.
+	When in doubt choose Vector - all of the operations take effectively constant time.
+</p>
+<h2>Parallel operations on collections</h2>
+<p>Parallel operations divide the computational work between CPU cores. You can check the amount of available cores with <p>
+<pre><code class="scala">Runtime.getRuntime().availableProcessors()</code></pre>
+<p>The syntax is really simple. You just call <code class="Scala">collection.par</code> and it returns the same collection with parallelized methods.
+	Example:
+<pre><code class="Scala">val cores = Runtime.getRuntime().availableProcessors()
+println("I have " + cores + " cores.")
+var range = (1 to 100)
+time { range.map(x => Thread.sleep(100)) }
+time { range.par.map(x => Thread.sleep(100)) }
+</code></pre>
+Output
+<pre><code class="Scala">I have 4 cores.
+Elapsed time: 10037ms
+Elapsed time: 2542ms
+</code></pre>
+<p>
+	There's a substantial overhead for setting up the parallel computations.
+	The computation inside your map, filter or whatever needs to take a long amount of time for it to be worth it.
+</p>
+
+<p>That's all for now, adding more details in the near future.</p>
