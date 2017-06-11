@@ -1,22 +1,20 @@
 <h1>Three.js shader tutorial part 2 - Normal mapping and textures</h1>
 <p>
-	Normal mapping is a technique for creating "bumps and wrinkles" on the surface of a mesh. 
-	It is done by altering the <i>normal</i> vector inside the vertex shader. 
+	Normal mapping is a technique for creating "bumps and wrinkles" on the surface of a mesh.
+	It is done by playing around with the normal vector inside the vertex shader.
 	<img width="200px" src="/static/images/normal.png">
-	
 </p>
 <p>
-	The normal vector is added by default to vertex shaders by ThreeJS. It points towards "outside of the  surface". Let's look at an example where an image texture alters the normal vector. The image is stored in <code>uniform sampler2D texture</code>
+	The normal vector is added by default to vertex shaders by ThreeJS. It points
+	towards "outside of the  surface".
+	Let's look at a shader where the magnitude of the normal mapping is based on a texture.
+	The texture is stored in <code class="code-inline">uniform sampler2D texture</code>
 </p>
-
-
 <script id="vertex" type="x-shader/x-vertex">
     varying vec3 pos;
-    varying vec2 vUv;
 	uniform sampler2D texture;
 	vec3 displace(vec3 position) {
-		vUv = uv;
-		vec3 color = texture2D( texture, vUv ).rgb;
+		vec3 color = texture2D( texture, uv ).rgb;
 		float amount = (1.0-length(color))*0.05;
 		return position + normal*amount;
 	}
@@ -26,13 +24,11 @@
     }
 </script>
 
-<pre><code>&lt;script id="vertex" type="x-shader/x-vertex"&gt;
+<pre><code class="language-glsl">&lt;script id="vertex" type="x-shader/x-vertex"&gt;
 	varying vec3 pos;
-	varying vec2 vUv;
 	uniform sampler2D texture;
 	vec3 displace(vec3 position) {
-		vUv = uv;
-		vec3 color = texture2D( texture, vUv ).rgb;
+		vec3 color = texture2D( texture, uv ).rgb;
 		float amount = length(color)*0.05;
 		return position + normal*amount;
 	}
@@ -43,11 +39,6 @@
 &lt;/script&gt;
 </code></pre>
 
-
-<p>
-  The vertex position is stored to <code>varying vec3 pos</code>. It will be used in the fragment shader for lightning calculations.
- <p>
-
 <script id="fragment" type="x-shader/x-fragment">
     varying vec3 pos;
     varying vec2 vUv;
@@ -56,7 +47,7 @@
         gl_FragColor = vec4(1.0,0.0,0.0,1.0)*light;
     }
 </script>
-<pre><code>&lt;script id="fragment" type="x-shader/x-fragment"&gt;
+<pre><code class="language-glsl">&lt;script id="fragment" type="x-shader/x-fragment"&gt;
     varying vec3 pos;
     void main() {
     	float light = pow(length(pos),3.0)*1.5;
@@ -66,12 +57,13 @@
 </code></pre>
 
 
-<p>Now let's create the scene and apply the shader to a sphere. 
-The texture is created with <code>THREE.ImageUtils.loadTexture( "/static/images/sphere_texture.jpg")</code>. It is passed to the material as uniform variable.</p>
+<p>Now let's create the scene and apply the shader to a sphere.
+The texture is created with <code class="code-inline">THREE.ImageUtils.loadTexture( "/static/images/sphere_texture.jpg")</code>. It is passed to the
+shader as uniform variable.</p>
 <p>The image looks like this:</p>
 <img width="23%" src="/static/images/sphere_texture.jpg"/>
 
-<pre><code>&lt;div id="webgl"&gt;&lt;/div&gt;
+<pre><code class="language-js">&lt;div id="webgl"&gt;&lt;/div&gt;
 &lt;script&gt;
     var width = $("#webgl").width();
     var height  = $("#webgl").height();
@@ -83,8 +75,8 @@ The texture is created with <code>THREE.ImageUtils.loadTexture( "/static/images/
     document.getElementById("webgl").appendChild( renderer.domElement );
     var shaderMat= new THREE.ShaderMaterial({
         uniforms: {
-            texture: { 
-                type: "t", value: THREE.ImageUtils.loadTexture( "/static/images/sphere_texture.jpg") 
+            texture: {
+                type: "t", value: THREE.ImageUtils.loadTexture( "/static/images/sphere_texture.jpg")
             }
         },
         vertexShader:   document.getElementById("vertex").textContent,
@@ -124,8 +116,8 @@ The texture is created with <code>THREE.ImageUtils.loadTexture( "/static/images/
     document.getElementById("webgl").appendChild( renderer.domElement );
     var shaderMat= new THREE.ShaderMaterial({
         uniforms: {
-        	texture: { 
-        		type: "t", value: THREE.ImageUtils.loadTexture( "/static/images/sphere_texture.jpg") 
+        	texture: {
+        		type: "t", value: THREE.ImageUtils.loadTexture( "/static/images/sphere_texture.jpg")
         	}
     	},
         vertexShader:   document.getElementById("vertex").textContent,
@@ -150,7 +142,7 @@ The texture is created with <code>THREE.ImageUtils.loadTexture( "/static/images/
 	Let's try to displace the mesh with <a href="https://en.wikipedia.org/wiki/Perlin_noise">perlin noise</a>. Instead of an image, we will use a GLSL function that generates perlin noise on the spot.
 </p>
 <p>Copy paste <a href="https://github.com/ashima/webgl-noise/blob/master/src/noise3D.glsl">this</a> thing to your vertex shader:</p>
-<pre><code>vec3 mod289(vec3 x) {
+<pre><code class="language-glsl">vec3 mod289(vec3 x) {
   return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
 
@@ -166,7 +158,7 @@ vec4 taylorInvSqrt(vec4 r) {
   return 1.79284291400159 - 0.85373472095314 * r;
 }
 
-float snoise(vec3 v) { 
+float snoise(vec3 v) {
   const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
   const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
   vec3 i  = floor(v + dot(v, C.yyy) );
@@ -178,10 +170,10 @@ float snoise(vec3 v) {
   vec3 x1 = x0 - i1 + C.xxx;
   vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
   vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
-  i = mod289(i); 
-  vec4 p = permute( permute( permute( 
+  i = mod289(i);
+  vec4 p = permute( permute( permute(
              i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
-           + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) 
+           + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
            + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
   float n_ = 0.142857142857; // 1.0/7.0
   vec3  ns = n_ * D.wyz - D.xzx;
@@ -210,14 +202,14 @@ float snoise(vec3 v) {
   p3 *= norm.w;
   vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
   m = m * m;
-  return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), 
+  return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
                                 dot(p2,x2), dot(p3,x3) ) );
 }
 </code></pre>
 
 <p>The vertex shader should look like this:</p>
 
-<pre><code>&lt;script id="vertex" type="x-shader/x-vertex"&gt;
+<pre><code class="language-glsl">&lt;script id="vertex" type="x-shader/x-vertex"&gt;
 	varying vec3 pos;
 	uniform float time;
 	/*
@@ -255,7 +247,7 @@ float snoise(vec3 v) {
 	  return 1.79284291400159 - 0.85373472095314 * r;
 	}
 
-	float snoise(vec3 v) { 
+	float snoise(vec3 v) {
 	  const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
 	  const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
 	  vec3 i  = floor(v + dot(v, C.yyy) );
@@ -267,10 +259,10 @@ float snoise(vec3 v) {
 	  vec3 x1 = x0 - i1 + C.xxx;
 	  vec3 x2 = x0 - i2 + C.yyy; // 2.0*C.x = 1/3 = C.y
 	  vec3 x3 = x0 - D.yyy;      // -1.0+3.0*C.x = -0.5 = -D.y
-	  i = mod289(i); 
-	  vec4 p = permute( permute( permute( 
+	  i = mod289(i);
+	  vec4 p = permute( permute( permute(
 	             i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
-	           + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) 
+	           + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
 	           + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
 	  float n_ = 0.142857142857; // 1.0/7.0
 	  vec3  ns = n_ * D.wyz - D.xzx;
@@ -299,7 +291,7 @@ float snoise(vec3 v) {
 	  p3 *= norm.w;
 	  vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
 	  m = m * m;
-	  return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), 
+	  return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
 	                                dot(p2,x2), dot(p3,x3) ) );
 	}
 	vec3 displace(vec3 position) {
@@ -347,19 +339,21 @@ float snoise(vec3 v) {
     }
     render2();
 </script>
-<h2>How to generate RGBA-textures</h2>
+<h2>Generating custom RGBA-textures</h2>
 <p>
-	If you want to pass an array of data to a shader, textures are your only option. 
+	So the first example used an image, and the second one generated data on the spot.
+	If you want to generate an array of data with the CPU and pass it to the shader, textures are your only option.
 	It's up to your imagination what you can store inside  :)
 </p>
-<pre><code>const texWidth = 1024;
+<pre><code class="language-js">const texWidth = 1024;
 const texHeight = 1024;
 const size = texWidth * texHeight * 4;
 const RGBA = new Uint8Array(size);
 for (var i = 0; i < size; i++) {
 	RGBA[i] = Math.floor(255*Math.random());
 }
-const texture = new THREE.DataTexture(  // Place this inside uniforms
+// Place this inside uniforms and treat as a texture, like in the 1st example
+const texture = new THREE.DataTexture(
 	RGBA,
 	texWidth,
 	texHeight,
@@ -370,10 +364,9 @@ const texture = new THREE.DataTexture(  // Place this inside uniforms
 texture.needsUpdate = true;
 </code></pre>
 
-<p>The texture can be dynamically updated on runtime with a new <code>Uint8Array</code> </p>
+<p>The texture can be updated in the render loop with a new <code class="code-inline">Uint8Array</code> </p>
 
-<pre><code>texture.image = { data: newData, width: texWidth, height: texHeight};
+<pre><code class="language-js">texture.image = { data: newData, width: texWidth, height: texHeight};
 texture.needsUpdate = true;
 material.uniforms.texture.value = texture;
 </code></pre>
-

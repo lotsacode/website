@@ -3,7 +3,7 @@
 <p>
 	If you try to render a thousand cubes in ThreeJS like this...
 </p>
-<pre><code>for (var i = 0; i < 1000; i++)
+<pre><code class="language-js">for (var i = 0; i < 1000; i++)
 	var geometry = new THREE.BoxGeometry(1, 1, 1);
 	scene.add(new THREE.Mesh(geometry, material));
 }
@@ -14,7 +14,7 @@
 <p>
 	The solution is to merge geometries.
 </p>
-<pre><code>var geometry = new THREE.Geometry();
+<pre><code class="language-js">var geometry = new THREE.Geometry();
 for (var i = 0; i < 1000; i++) {
 	var g = new THREE.BoxGeometry(1, 1, 1);
 	geometry.mergeMesh(new THREE.Mesh(g));
@@ -63,7 +63,7 @@ render();
 </script>
 
 <p>
-	Note: <code>geometry.mergeMesh(mesh)</code> is shorthand for <code>geometry.merge(mesh.geometry, mesh.matrix)</code>.
+	Note: <code class="code-inline">geometry.mergeMesh(mesh)</code> is shorthand for <code class="code-inline">geometry.merge(mesh.geometry, mesh.matrix)</code>.
 </p>
 
 <h2>But now my materials are gone! Multimaterials to the rescue.</h2>
@@ -74,20 +74,20 @@ render();
 <p>
 	The first step is to define an array of materials, for example
 </p>
-<pre><code>var materials = [
+<pre><code class="language-js">var materials = [
 	new THREE.MeshPhongMaterial({color: 0xff0000}),
 	new THREE.MeshPhongMaterial({color: 0x00ff00}),
 	new THREE.MeshPhongMaterial({color: 0x0000ff})
 ]
 </code></pre>
 <p>
-	Each face of a geometry has a property called <code>materialIndex</code>.
-	This indicates which material of the array is used. All we need to do is set this index as we like and create a <code>new THREE.MultiMaterial(materials)</code>.
+	Each face of a geometry has a property called <code class="code-inline">materialIndex</code>.
+	This indicates which material of the array is used. All we need to do is set this index as we like and create a <code class="code-inline">new THREE.MultiMaterial(materials)</code>.
 </p>
 <p>
 	To render a thousand cubes with the materials defined above, you could do this:
 </p>
-<pre><code>var geometry = new THREE.Geometry();
+<pre><code class="language-js">var geometry = new THREE.Geometry();
 for (var i = 0; i < 1000; i++) {
 	var g = new THREE.BoxGeometry(1, 1, 1);
 	var index = Math.floor(Math.random()*3) // Random index between 0 and 2.
@@ -153,20 +153,22 @@ render2();
 <p>
 	A common thing in games is to have entities that move. To implement this, you should store the index of the first vertex and the total amount of vertices inside each entity.
 </p>
-<pre><code>// ... Entity class
-this.addToGeometry = function() {
+<pre><code class="language-js">Entity.prototype.addToGeometry = function() {
 	this.index = geometry.vertices.length;
 	geometry.mergeMesh(this.mesh);
 }
 </pre></code>
 Now the entity's position can be edited like this
-<pre><code>// ... Entity class
-for (var i = 0; i < this.mesh.vertices.length; i++) {
+<pre><code class="language-js">for (var i = 0; i < this.mesh.vertices.length; i++) {
 	var vertex = geometry.vertices[this.index + i];
 	// Edit vertex ...
 }
 </pre></code>
 <p>
-	A thing about geometries is that you can't add vertices while rendering, only change their position.
-	The general strategy is to allocate all the possible vertices/faces right from the start, and then hide the vertices/faces that you don't want to see just yet. Set their position to the abyss (or behind the camera) and move them back when needed. Same thing applies for deletion.
+	A thing about geometries is that you can't add vertices while rendering, only
+	change their position.
+	The general strategy is to allocate all the possible vertices/faces right
+	from the start, and then hide the vertices/faces that you don't want to see
+	just yet. Set their position to the abyss (or behind the camera) and move them
+	back when needed. Same principle applies for deletion.
 </p>

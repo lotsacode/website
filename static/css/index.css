@@ -1,14 +1,3 @@
-@font-face {
-  font-family: Adam;
-  src: url("../fonts/Adam.ttf");
-}
-
-@font-face {
-  font-family: LiberationMono-Regular;
-  src: url("../fonts/LiberationMono-Regular.ttf");
-}
-
-
 html, body {
 	height: 100%;
 	background: rgba(0,0,0,0);
@@ -16,11 +5,6 @@ html, body {
 }
 
 body {
-    /*background: url('../images/ss.png') no-repeat center center fixed;
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-    background-size: cover;*/
     width: 100%;
     height: 100%;
     overflow-x: hidden;
@@ -31,42 +15,29 @@ a {
 	text-decoration: none;
 }
 
-#header-description {
-	float: left;
-	font-size: 38px;
-}
-
-#main div:hover {
-}
-
-#main img {
-}
-
-
 #articles {
-	width: 78%;
 	height: 100%;
-	margin-left: calc(22% + 5px);
-	color: #404040;
 	font-size: 12px;
-	line-height: 32px;
+	line-height: 40px;
+	width: calc(55%);
+    min-width: 480px;
+    min-height: 680px;
+    margin: 0 auto;
+	margin-top: 0px;
 }
 
 .article {
-	margin-left: 50px;
-	background: #ffffff;
-	float: left;
-	clear: left;
-	margin-top: 5px;
-	border-radius: 5px;
+	margin-top: 30px;
 }
 
-.date {
+.article-date {
 	height: 16px;
 	color: rgba(0,0,0,0.4);
 	font-size: 16px;
 }
 
-.header {
-	color: #505050;
+.article-header {
+	font-family: Montserrat-Bold;
+	color: #00aaff;
+	font-size: 16px;
 }

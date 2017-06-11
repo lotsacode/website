@@ -1,14 +1,38 @@
 <h1>Three.js shader tutorial part 1 - Basic example</h1>
+<p>
+    Shaders can be confusing for someone new to computer graphics.
+    In this tutorial I'll try to explain in simple terms what they are
+    and how to use them in ThreeJS.
+</p>
+<p>
+    A shader is a small program that lives in the GPU.
+    They are written in a special graphics language called OpenGL Shading Language (GLSL), which is almost like the C language.
+    In ThreeJS shader programs are applied to a special material - <code class="code-inline">THREE.ShaderMaterial</code>.
+</p>
+<p>
+    Why can't we just skip learning C and write an ordinary javascript programs
+    that operate on pixels instead of shader programs? It's possible, but it's not going to perform very well
+    due to the parallel nature of computer graphics.
+    When you run a shader program, the GPU distributes your program to hundreds of cores that execute it in parallel.
+    This is where the power of the GPU comes from. The GPU isn't restricted to just computer graphics, you can
+    use it for any kind of parallel computations, for example mining cryptocurrency, but in this tutorial we'll focus on ThreeJS.
+</p>
+
+
+<h2>Overview of GLSL programs</h2>
 
 <p>
-    A shader is a small program that lives in the GPU. 
-    They are written in a special graphics language called OpenGL Shading Language (GLSL), which highly resembles the C language.
-    Shaders are applied to 3d objects a.k.a meshes. They can be used for post processing effects too but in this tutorial we'll focus on meshes.
-    Shaders come in two types, vertex- and fragment shaders.
+    Like said, GLSL is similiar to C. Shader programs come in two types, vertex- and fragment shaders.
+    Every vertex shader should contain a <code class="code-inline">main</code> function that sets the value of <code class="code-inline">gl_Position</code>.
+    This is the 2D location of the vertex projected to the camera. Every fragment shader should contain a <code class="code-inline">main</code> function that sets the value of
+    <code class="code-inline">gl_FragColor</code>. This is the color that is assigned to each pixel. The position of the pixel is stored in <code class="code-inline">gl_FragCoord</code>.
 </p>
+
 <p>
-    A vertex shader runs first. It's primary job is to transform the vertices from 3D coordinates to screen coordinates. A vertex shader can be used to transform the vertices however you like. A fragment shader runs second. It's job is to define how the faces of a mesh are coloured.
+    The specific details of OpenGL's rendering pipeline is a long story,
+    you can read more about it <a href="https://www.khronos.org/opengl/wiki/Rendering_Pipeline_Overview">here</a>.
 </p>
+
 <p>
     There are three types of special variables in shaders: <b>uniforms</b>, <b>attributes</b>, and <b>varyings</b>.
 </p>
@@ -16,15 +40,11 @@
     <b>Uniforms</b> are variables that have the same value for all vertices, such as time. Uniforms can be defined inside Javascript and passed to the shader.
 </p>
 <p>
-    <b>Attributes</b> are variables associated with each vertex, for instance, the vertex position, is an example of data that would be stored in an attribute. Attributes can only be accessed within the vertex shader.
+    <b>Attributes</b> are variables associated with each vertex, for instance, the vertex position. Attributes can only be accessed within the vertex shader.
 </p>
 <p>
-    <b>Varyings</b> are variables that are defined in the vertex shader, and are automatically passed (and interpolated) to the fragment shader. Varyings can be used to pass down an attribute to a fragment shader, for example. 
-</p>
-<p>   
-    But why use shaders? Well, doing computer graphics with the CPU is really slow.
-    A shader gives you direct access to the parallel power of the GPU, letting you render insanely complex looking graphics with 60 fps.
-    The catch is that you have to learn GLSL, shaders can be difficult to master and very annoying to debug.
+    <b>Varyings</b> are variables that are defined in the vertex shader,
+    and are automatically passed (and interpolated) to the fragment shader.
 </p>
 
 <h2>Example vertex shader</h2>
@@ -37,7 +57,9 @@
     }
 </script>
 
-<pre><code>&lt;script id="vertex" type="x-shader/x-vertex"&gt;
+
+
+<pre><code class="language-glsl">&lt;script id="vertex" type="x-shader/x-vertex"&gt;
     varying vec3 pos;
     void main() {
         pos = position;
@@ -45,11 +67,22 @@
     }
 &lt;/script&gt;
 </code></pre>
-
-<p>
-    Let's break this down. Every vertex shader contains a main-function that sets the value of <code>gl_Position</code>. We declare a <code>varying vec3 pos</code> and make it store the vertex position. It will be used in the fragment shader for lightning calculations. The line <code>gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);</code> is the transformation from model space to screen space. If you're confused what it does, don't worry. Just make sure you include it in every vertex shader. You can transform the variable <code>position</code> for morph effects.
+<p>Let's break down the line
+<pre><code class="language-glsl">gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);</code></pre>
 </p>
-
+<p>
+    The matrices you are seeing here are default uniform variables provided by ThreeJS.
+    <code class="code-inline">position</code> is a vertex position that is picked from <code class="code-inline">THREE.Geometry.vertices</code>.
+</p>
+<p>
+    <code class="code-inline">modelMatrix</code> transforms a vertex from model space to world space.
+</p>
+<p>
+    <code class="code-inline">viewMatrix</code> transforms a vertex from world space to camera space.
+</p>
+<p>
+    <code class="code-inline">projectionMatrix</code> projects a vertex from camera space to 2D coordinates.
+</p>
 
 <h2>Example fragment shader</h2>
 
@@ -62,7 +95,7 @@
     }
 </script>
 
-<pre><code>&lt;script id="fragment" type="x-shader/x-fragment"&gt;
+<pre><code class="language-js">&lt;script id="fragment" type="x-shader/x-fragment"&gt;
     varying vec3 pos;
     uniform float time;
     void main() {
@@ -73,16 +106,10 @@
 </code></pre>
 
 
-<p>
-    Every fragment shader contains a main-function that sets the value of gl_FragColor.
-    The variable <code>pos</code> should now contain the vertex position.
-    The variable <code>light</code> is for making the edges of our mesh little bit pronounced.
-    Notice the line <code>uniform float time</code>. That thing holds the current time. 
-</p>
 
 <h2>Example scene</h2>
 
-<pre><code>&lt;div id="webgl" style="width: 100%; height: 400px;"&gt;&lt;/div&gt;
+<pre><code class="language-js">&lt;div id="webgl" style="width: 100%; height: 400px;"&gt;&lt;/div&gt;
 &lt;script&gt;
     var scene = new THREE.Scene();
     var width = $("#webgl").width();
@@ -147,35 +174,8 @@
 </script>
 
 
-<p>All you need to do is declare a shader material and create a mesh with it. ShaderMaterial takes a vertex shader, a fragment shader and an object that contains optional uniform variables. 
+<p>As you can see, all you need to do is declare a shader material and create a mesh with it. ShaderMaterial takes a vertex shader, a fragment shader and an object that contains optional uniform variables.
 
 </p>
-<pre><code>shaderMaterial = new THREE.ShaderMaterial({
-    uniforms:       {time: {type: 'f', value: 0.0}},
-    vertexShader:   vShader.textContent,
-    fragmentShader: fShader.textContent
-});
-</code></pre>
-Uniform types available in ThreeJS can be seen <a href="https://github.com/mrdoob/three.js/wiki/Uniforms-types">here</a>. You can use floats, vectors, matrices and textures.</p>
-
-
-<h2>Built-in uniforms and attributes in ThreeJS</h2>
-
-<p>ThreeJS comes with a bunch of <a href="https://threejs.org/docs/api/renderers/webgl/WebGLProgram.html">default uniforms and attributes</a>. For a vertex shader, they are:</p>
-
-<p><code>uniform mat4 modelMatrix;      // transforms a 3-vector from model space to world space</code></p>
-<p><code>uniform mat4 viewMatrix;       // transforms a 3-vector from world space to camera space</code></p>
-<p><code>uniform mat4 projectionMatrix; // transforms a 3-vector from camera space to screen space</code></p>
-<p><code>uniform vec3 cameraPosition;   // camera position in world space</code><br>
-<p><code>attribute vec3 position;       // vertex position in model space</code><br>
-<p><code>attribute vec3 normal;         // vector pointing towards “outside of the surface”</code></p>
-
-<p>The fragment shader comes with fewer variables. (Note, you can use varyings to pass down variables to the fragment shader).</p>
-
-<p><code>uniform mat4 viewMatrix;</code></p>
-<p><code>uniform vec3 cameraPosition;</code></p>
-
-
-
-
-
+Uniform types available in ThreeJS can be seen <a href="https://github.com/mrdoob/three.js/wiki/Uniforms-types">here</a>.
+You can use floats, vectors, matrices and textures.</p>

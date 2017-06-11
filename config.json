@@ -1,17 +1,8 @@
 {
-    "released": [
-    	"hello-world",
-    	"how-to-create-a-geometry-from-scratch-in-three-js",
-    	"polygon-madness-is-here",
-    	"how-to-optimize-a-threejs-scene",
-    	"three-js-shader-tutorial-part2-normal-mapping-and-textures",
-    	"three-js-shader-tutorial-part1-basic-example",
-    	"heres-a-free-file-uploading-service",
-    	"creating-a-real-time-game-server-with-nodejs-and-socketio",
-      "how-to-build-a-web-scraper-with-nodejs",
-      "user-authentication-example-with-node-js-and-mongo-db",
-      "how-to-implement-dragndrop-file-uploading-with-nodejs",
-      "10-tips-for-getting-the-most-out-of-atom-text-editor-in-windows",
-	  "demystifying-advanced-features-of-scala"
+    "excluded": [
+        "how-to-create-a-3d-spectrogram-with-Javascript",
+        "RegexScraper-Beta-is-here",
+        "getting-started-with-react-js",
+        "user-authentication-example-with-node-js-and-mongo-db"
     ]
 }

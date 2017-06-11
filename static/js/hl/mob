@@ -1,0 +1,24 @@
+<h1>How to optimize a ThreeJS game for mobile platforms</h2>
+
+Launching a browser game for mobile is a daunting task.
+Your game has to be very simple in terms of graphics for it to render with acceptable FPS.
+Your dealing with a very low amount of RAM and a painful debugging process.
+
+<h2>Catching the bottleneck</h2>
+<p>
+
+</p>
+<h2>Draw calls</h2>
+<p>
+    I have covered the topic of optimizing a scene in terms of draw calls
+    here. Doing so will leverage alot of computing to the GPU.
+</p>
+
+<h2>Memory</h2>
+<p>
+    The amount of RAM in modern mobile devices vary between 256MB to 2048MB.
+    How much memory your game will consume is up to you but I'd keep it at most around 70MB.
+    How to track memory???????
+</p>
+
+<h2>DOM and touch events</h2>

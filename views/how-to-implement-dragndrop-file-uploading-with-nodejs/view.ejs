@@ -1,27 +1,26 @@
-<h1>How to implement drag'n'drop file uploading with NodeJS</h1>
+<h1>How to implement drag'n'drop file uploading with NodeJS/Express</h1>
 
 <p>
-	In this tutorial we'll make a HTML widget where you can drag files to (or click to open the usual file browser). After that we'll look at how to send the file to a NodeJS web server. First off, here's the HTML elements. 
+	In this tutorial we'll make a HTML widget where you can drag files to
+	(or click to open the usual file browser). After that we'll look at how to
+	send the file to a NodeJS/Express web server with jQuery. Here's the HTML setup
 </p>
 
-<pre><code>&lt;input type="file" id="file" style="display: none;"&gt;&lt;/input&gt;
+<pre><code class="language-js">&lt;input type="file" id="file" style="display: none;"&gt;&lt;/input&gt;
 &lt;div id="dropzone"&gt;Drop files here or click to upload.&lt;/div&gt;
 </pre></code>
 
-<p>
-	The hidden input element is activated when you click the drop zone.
-</p>
-
 <h2>Catching and sending the file</h2>
 
-<p>Now we need to catch the file when the user chooses it or drags it to the div. I'm using jQuery so make sure to include it.</p>
+<p>Now let's catch the file with jQuery when the user chooses it or drags it to the div. </p>
 
-<pre><code>$("#dropzone").on("drop", function(e) {
+<pre><code class="language-js">$("#dropzone").on("drop", function(e) {
     e.preventDefault();
     sendFile(e.originalEvent.dataTransfer.files[0])
 });
 
 $("#dropzone").on('dragover', function(e) {
+	// dragover needs to be prevented for some reason
 	e.preventDefault();
 });
 
@@ -34,11 +33,10 @@ $("#file").change(function() {
 });
 </code></pre>
 
-<p>For some reason the dragover event needs to be prevented for the drag'n'dropping to work.</p>
+<p>The file can be sent to the server by wrapping it in a
+	FormData-object and using a XMLHttpRequest.</p>
 
-<p>After we have the file we put it in a FormData-object and send it to the server with XMLHttpRequest.</p>
-
-<pre><code>function sendFile(file) {
+<pre><code class="language-js">function sendFile(file) {
 	var xhr = new XMLHttpRequest();
 	xhr.open("POST", '/upload', true);
 	var formData = new FormData();
@@ -50,11 +48,12 @@ $("#file").change(function() {
 <h2>Server side</h2>
 
 <p>
-	You can use <code>multiparty</code> to parse the request (you need to install it with npm).
-	The file should be automatically saved to the project's root directory.
+	To catch the file in the server, you can use <code class="code-inline">multiparty</code> to parse the
+	incoming request. First you need to install it
 </p>
-
-<pre><code>var multiparty = require('multiparty');
+<pre><code class="language-js">npm install multiparty</code></pre>
+<p>And then add this code to your web server</p>
+<pre><code class="language-js">var multiparty = require('multiparty');
 app.post("/upload", function(req, res) {
 	var form = new multiparty.Form({uploadDir: __dirname});
     form.parse(req, function(err, fields, files) {
@@ -63,14 +62,15 @@ app.post("/upload", function(req, res) {
 });
 </pre></code>
 
+<p>With this setup the file should be automatically saved to the project's root directory.</p>
 <h2>Bonus: Monitoring progress</h2>
-<p>To monitor the progress of the uploading, try this</p>
+<p>To monitor the progress of the uploading in the client, try this</p>
 
-<pre><code>xhr.onprogress = function(e) {
+<pre><code class="language-js">xhr.onprogress = function(e) {
 	if (e.lengthComputable) {
-    	var percentComplete = (e.loaded / e.total)*100;  
+    	var percentComplete = (e.loaded / e.total)*100;
     	console.log(percentComplete);
-    } 
+    }
 };
 </pre></code>
 

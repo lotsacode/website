@@ -1,0 +1,147 @@
+<h1>Getting started with ...</h1>
+<p>
+    If you're like me you've heard alot of buzz about
+    React, Angular, Ember and Vue but never bothered to learn one of them.
+</p>
+<h2>Why Vue?</h2>
+<p>
+	Why not go with the trend and choose React?
+	There's nothing wrong with React, but if it's your first time learning a modern front-end framework
+	it's gonna be a pain in the ass. Writing React code means you have to learn ES2015 and JSX which is a weird
+	extension of traditional JS that makes you write HTML inside Javascript. Then there's a complex build system
+	that uses Babel, Webpack and others to compile your code to browser compatible form.
+</p>
+<h2>
+<!--<p>
+    If you're like me you've heard alot of buzz about
+    React but never bothered to try it out.
+    Now with React Native becoming the next big thing
+    I think it's time to get in the React ship.
+</p>
+<p>
+	In this article I'm going to
+	<ol>
+		<li>give a short review of what React is</li>
+		<li>go through the official example project that is
+		created with the npm module <code class="code-inline"create-react-app</code></li>
+		<li>look at how to write simple react code</li>
+		<li>build a really simple and stupid game on top of the example project</li>
+		<li>look at how to distribute it as both a web app and a native electron app.</li>
+	</ol>
+</p>
+
+<h2>What the heck is React anyways?</h2>
+<p>From wikipedia</p>
+<blockquote>
+    React allows developers to create large web applications that use data which can change over time,
+    without reloading the page. Its main goal is to be fast, simple and scalable.
+    React processes only user interfaces in applications.
+    This c orresponds to View in the Model-View-Controller (MVC) template,
+    and can be used in combination with other JavaScript libraries or frameworks in MVC, such as AngularJS.
+</blockquote>
+<p>
+	To keep it short and simple - React is a Javascript framework for generating HTML. That's it.
+	The point is to...???
+</p>
+
+<h2>Getting started with create-react-app</h2>
+
+<p>
+	If you follow the official tutorials on setting up a local environment,
+	you'll be instructed to use a npm module called <code class="code-inline"create-react-app</code>.
+	Let's go over what this thing actually contains and try to build something simple with it.
+	Warning - the project actually contains alot more than just React. It comes with a bunch of build tools
+	and node stuff. There's alot to learn for someone new to Javascript, so take it slow and steady.
+</p>
+<p>
+	Okay, let's set up the example project from terminal.
+</p>
+<pre><code class="code-inline"npm install -g create-react-app
+create-react-app myapp
+cd myapp
+</code></pre>
+<p>Now your current directory should look like this</p>
+<pre><code class="code-inline"myapp/
+	build/
+	node-modules/
+	public/
+		index.html
+		favicon.ico
+	src/
+		App.css
+		App.js
+		App.test.js
+		index.css
+		index.js
+		logo.svg
+	.gitignore
+	package.json
+	README.md
+</code></pre>
+<p>
+	<code class="code-inline"build</code> contains optimized files for production.
+	The files are generated with <code class="code-inline"npm run build</code>.
+</p>
+<p>
+	<code class="code-inline"index.html</code> is the default view that all React apps should contain.
+	It's actually not real html, as it acts as a template. The build process
+	modifies it according to your React code.
+</p>
+<p>
+	<code class="code-inline"src/</code> should contain <code class="code-inline".js</code> and <code class="code-inline".css</code> source files
+	along with any assets such as images or fonts.
+</p>
+<p>
+	<code class="code-inline"package.json</code> contains information about your project and a couple of scripts we'll need.
+</p>
+<p>
+	<code class="code-inline"README.md</code> contains in-depth information about the project. I'm using it as a reference, you can view it
+	<a href="https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#table-of-contents">here</a>.
+</p>
+<h2>The build process</h2>
+<p>
+	<code class="code-inline"npm start</code> will launch a local web server for viewing your app.
+	It's good for development but for deployment it is best to do <code class="code-inline"npm run build</code>
+	and serve the generated build files with a web server of choice.
+</p>
+<p>
+<b>What does <code class="code-inline"npm run build</code> actually do?</b>
+<p>According to <a href="https://github.com/facebookincubator/create-react-app/blob/master/README.md#getting-started">
+	this</a> page it's "subject to change" and currently uses
+	<ul>
+		<li>Webpack - a build tool that puts all of your assets in a dependency graph.
+			It lets you use require() in your source code to point to local files
+			and decide how they're processed in your final Javascript bundle,
+			like replacing the path with a URL pointing to a CDN.</li>
+		<li>
+			Babel - a compiler that converts modern javascript to browser compatible form.
+			In this case modern javascript refers to ES2015 along with JSX
+			syntax, object spread and class properties.
+		</li>
+		<li>Autoprefixer - a tool that adds browser-specific fields to your CSS files</li>
+		<li>ESLint - a tool for identifying and reporting faulty JavaScript</li>
+		<li>Jest - a testing framework for Javascript and specifically React applications</li>
+		<li>and others...</li>
+	</ul>
+	Don't worry if all of this seems a bit too much.
+	Think of the build process as a magic trick that takes in a React app
+	and spits out optimized assets that any browser can understand.
+	All you gotta do is get comfortable writing ES2015 along with JSX.
+</p>
+<h2>How to write simple React code</h2>
+<p>The philosophy behind React is to write your UI components
+	in a reuseable manner to a single JSX file.
+	I'm going to demonstrate the power of this by writing a button in
+	traditional jQuery.</p>
+Html...
+<pre><code class="code-inline"&lt;div class="button"&gt;Click me!&lt;/div&gt;
+&lt;script&gt;
+	$(".button").click(function() {
+		$(this).html("Thank you.");
+	});
+&lt;/script&gt;
+</code></pre>
+
+<h2>Integrating it with Express</h2>
+<h2>Integrating it with Electron</h2>
+-->

@@ -1,0 +1,66 @@
+@font-face {
+    font-family: Montserrat;
+    src: url('../fonts/Montserrat-Regular.otf');
+}
+
+@font-face {
+    font-family: Montserrat-Bold;
+    src: url('../fonts/Montserrat-Bold.otf');
+}
+
+@font-face {
+    font-family: Avenir;
+    src: url('../fonts/AvenirNextLTPro-Regular.otf');
+}
+
+@font-face {
+    font-family: Avenir-Italic;
+    src: url('../fonts/AvenirNextLTPro-It.otf');
+}
+
+body {
+    line-height: 32px;
+    padding: 0px;
+    margin: 0px;
+    font-family: Avenir, sans-serif;
+    font-size: 18px;
+    background: rgba(0,0,0,0);
+    color: #303030;
+}
+
+::selection {
+  background: #88ccff;
+}
+::-moz-selection {
+  background: #88ccff;
+}
+
+.menu-button {
+    position: fixed;
+    opacity: 0.25;
+}
+
+.menu-button:hover {
+    opacity: 0.8;
+}
+
+#archive-button {
+    left: 15px;
+    top: 15px;
+}
+
+#github-button {
+    left: 15px;
+    top: 80px;
+}
+
+#question-button {
+    left: 15px;
+    top: 145px;
+}
+
+@media screen and (max-width: 720px) {
+    .menu-button {
+        display: none;
+    }
+}

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title><%=title%> | www.lotsacode.tk</title>
+        <link rel="shortcut icon" type="image/png" href="/static/images/favicon.png">
+        <link rel="stylesheet" type="text/css" href="/static/css/article.css">
+        <link rel="stylesheet" href="/static/css/main.css"/>
+        <link rel="stylesheet" href="/static/css/prism-themes/prism-atom-dark.css">
+        <script src="/static/js/prism.js"></script>
+        <script src="/static/js/jquery-2.1.1.min.js"></script>
+        <script src="/static/js/three.min.js"></script>
+        <script src="/static/js/math.min.js"></script>
+        <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML"></script>
+        <script type="text/x-mathjax-config">
+            MathJax.Hub.Config({
+              tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+            });
+        </script>
+
+    </head>
+    <body>
+      <%- include("top.ejs") %>
+      <div id="article">
+        <div class="article-date">Posted <%=date%></div>
+      	<%- include(fileName) %>
+        <div id="navigation">
+          <div id="next">
+            <h3>Next up</h3>
+            <a href="<%=next.route%>"><div id="next-link"><%=next.title%></div></a>
+          </div>
+          <div id="previous">
+            <h3>Previously...</h3>
+            <a href="<%=previous.route%>"><div id="previous-link"><%=previous.title%></div></a>
+          </div>
+        </div>
+        <div id="comments">
+          <div id="disqus_thread"></div>
+          <script>
+          (function() { // DON'T EDIT BELOW THIS LINE
+          var d = document, s = d.createElement('script');
+          s.src = 'https://lotsacode-tk.disqus.com/embed.js';
+          s.setAttribute('data-timestamp', +new Date());
+          (d.head || d.body).appendChild(s);
+          })();
+          </script>
+          <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        </div>
+    </body>
+</html>

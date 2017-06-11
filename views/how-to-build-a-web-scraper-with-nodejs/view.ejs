@@ -1,15 +1,21 @@
 <h1>How to build a web scraper with NodeJS</h1>
 
-<p>In this tutorial I will show you how to build a web scraper with server side Javascript. Web scrapers are programs that systematically browse the World Wide Web for the purpose of gathering data.</p>
+<p>
+    In this tutorial I'll show you how to build a web scraper with NodeJS.
+    Web scrapers are programs that browse the web for the purpose of gathering data.
+    The data can be anything useful like media links, email addressess or stock prices.
+</p>
 
 <h2>Dependencies</h2>
-<p>We're gonna use <a href="https://www.npmjs.com/package/request">request</a>, a library for sending http requests and <a href="https://github.com/cheeriojs/cheerio">cheerio</a>, a library for parsing http data with jQuery syntax. Install them with npm
-<pre><code>npm install request
+<p>We're gonna use <a href="https://www.npmjs.com/package/request">request</a>,
+a library for sending http requests and <a href="https://github.com/cheeriojs/cheerio">cheerio</a>,
+a library for parsing http data with jQuery syntax. Install them with npm
+<pre><code class="language-js">npm install request
 npm install cheerio
 </pre></code>
 <h2>Gathering links from a web page</h2>
 <p>Let's start off with something simple. This example makes a request to <a href="http://www.google.com">http://www.google.com</a> and prints out all the links in the webpage.</p>
-<pre><code>var request = require('request');
+<pre><code class="language-js">var request = require('request');
 var cheerio = require('cheerio');
 request('http://www.google.com', function (error, response, body) {
   var $ = cheerio.load(body);			// Parse request body
@@ -22,7 +28,7 @@ request('http://www.google.com', function (error, response, body) {
 </code></pre>
 The output should look something like this
 
-<pre><code>
+<pre><code class="language-js">
 [ 'https://www.google.fi/webhp?tab=ww',
   'http://www.google.fi/imghp?hl=fi&tab=wi',
   'http://maps.google.fi/maps?hl=fi&tab=wl',
@@ -53,13 +59,18 @@ The output should look something like this
   '/intl/fi/policies/terms/' ]
 </code></pre>
 
-<h2>A note on options and user agent</h2>
+<h2>A couple gotcha's</h2>
 <p>
-  If you run your scraper without an user agent, some web pages will not like you
+    If you look at the above list of links, some of them start with <code class="code-inline">/</code> which means
+    that the host name is implicit. Not good. Fortunately you can find the host name from
+    <code class="code-inline">response.req._headers.host</code>.
+</p>
+<p>
+  If you send http requests without any headers, some web servers will not like you
   and redirect you to an empty page.
   To configure the request, try something like this
 </p>
-<pre><code>var options = {
+<pre><code class="language-js">var options = {
   url: "http://myurl.com",
   method: 'GET',
   headers: {
@@ -67,47 +78,65 @@ The output should look something like this
       'Accept-Charset': 'utf-8',
       'User-Agent': 'my computer'
   },
-  timeout: 10000
+  timeout: 10000,
+  rejectUnauthorized: false
 };
 request(options, function (error, response, body) {
   ...
 });</code></pre>
 <p>Full list of options can be seen <a href="https://github.com/request/request#requestoptions-callback">here</a>.</p>
-
 <h2>Automated visiting</h2>
-
 <p>
 	Typically you'd like the scraper to automatically find and visit thousands of web pages.
-	A simple strategy would be to  make the program gather links under a base domain and recursively visit them. Something like this
+	A simple strategy would be to  make the program gather links under a base domain and
+    recursively visit them. Something like this
 	<ol>
 		<li>Visit a domain, such as http://google.com</li>
 		<li>Find and store desired data, if any</li>
 		<li>Mark the URL as visited so it won't be visited again</li>
 		<li>Repeat step 1 for <b>each unmarked URL</b> found in the page</li>
 	</ol>
-	Unfortunately, that is not going to work. After a few iterations the program tries to do billions of HTTP requests. It blows up.
+	Unfortunately, that is not going to work. After a few iterations the program tries to do
+    billions of HTTP requests. It blows up.
 </p>
 <p>
-	How about this - make the program choose a random link under a domain and follow it (recursively). If the link leads to a page that has no links we're in trouble. This can be fixed by making the program go back when there's no more links to visit. Okay, the new strategy is to
+	How about this - make the program choose a random link under a domain and follow it
+    (recursively). If the link leads to a page that has no links we're in trouble.
+    This can be fixed by making the program go back when there's no more links to visit.
+    To summarize, the new strategy is to
 </p>
-
-	<ol>
-		<li>Visit a domain, such as http://google.com</li>
-		<li>Find and store desired data, if any</li>
-		<li>Mark the URL as visited so it won't be visited again</li>
-		<li>Repeat step 1 for a random unmarked link in the page. If all of the links are marked, <b>go back</b></li>
-	</ol>
-
+<ol>
+	<li>Visit a domain, such as http://google.com</li>
+	<li>Find and store desired data, if any</li>
+	<li>Mark the URL as visited so it won't be visited again</li>
+	<li>Repeat step 1 for a random unmarked link in the page. If all of the links are marked, <b>go back</b></li>
+</ol>
 </code></pre>
-
 <h2>Here's a media scraper</h2>
-
-
 <p>
-Okay, next up is a scraper that gathers images under a given domain with the above strategy. To implement backtracking you need to create a "linked list" data structure for the links. It contains the original link and a pointer to the link that found it.
+Here's a program that employs the above strategy and gathers images.
+To implement backtracking you need to create a "linked list" data structure for the links.
+It contains the original link and a pointer to the link that found it.
 </p>
 
-<pre><code>var MediaScraper = function(baseDomain) {
+<pre><code class="language-js">var request = require('request');
+var cheerio = require('cheerio');
+
+Array.prototype.includes = function(x) {
+	for (var i = 0; i < this.length; i++) {
+		if (this[i] === x) return true;
+	}
+	return false;
+}
+
+// Linked list class for backtracking
+var Link = function(href, parent) {
+	this.href = href;
+	this.parent = parent;
+	if (this.parent == null) this.parent = this;
+}
+
+var MediaScraper = function(startURL) {
 
 	this.visits = 0; 		// Current amt of visits
 	this.limit = 10;		// Default upper limit for amt of visits
@@ -116,13 +145,6 @@ Okay, next up is a scraper that gathers images under a given domain with the abo
 	this.visited = [];		// Array of visited pages
 	this.mediaLinks = [];   // Scraped media
 	this.done = false;
-
-	// Linked list class for backtracking
-	var Link = function(href, parent) {
-		this.href = href;
-		this.parent = parent;
-		if (this.parent == null) this.parent = this;
-	}
 
 	// Marks a page as visited
 	this.mark = function(href) {
@@ -135,7 +157,24 @@ Okay, next up is a scraper that gathers images under a given domain with the abo
 		return this.visited.includes(href);
 	};
 
-	// Visit a page
+	// Gathers media
+	this.gather = function(response, $) {
+		var scraper = this;
+		$('a, img').get().forEach(function(x) {
+			var href = $(x).attr("href");
+			if (href && href.startsWith('/')) href = "http://" + response.req._headers.host + href;
+			if (href && !scraper.mediaLinks.includes(href) && (href.endsWith("jpg") || href.endsWith("png"))) {
+				scraper.mediaLinks.push(href);
+			}
+			var src = $(x).attr("src");
+			if (src && src.startsWith('/')) src = "http://" + response.req._headers.host + src;
+			if (src && !scraper.mediaLinks.includes(src) && (src.endsWith("jpg") || src.endsWith("png"))) {
+				scraper.mediaLinks.push(src);
+			}
+		});
+	}
+
+	// Visits a page
 	this.visit = function(link) {
 		if (this.visits >= this.limit) {
 			if (!this.done) {
@@ -145,7 +184,6 @@ Okay, next up is a scraper that gathers images under a given domain with the abo
 			return;
 		}
 		this.visits += 1;
-		this.mark(link.href);
 		console.log("Visiting " + link.href + " [" + this.visits + "/" + this.limit + "]");
 		var scraper = this;
 		request(link.href, {timeout: this.timeout}, function (error, response, body) {
@@ -156,35 +194,26 @@ Okay, next up is a scraper that gathers images under a given domain with the abo
 			}
 			var $ = cheerio.load(body);
 			// Gather media
-			$('a').get().forEach(function(link) {
-				var href = $(link).attr("href");
-				if (href.startsWith('/')) href = baseDomain + href;
-				if (href && !scraper.mediaLinks.includes(href) && href.endsWith("jpg") || href.endsWith("png")) {
-					scraper.mediaLinks.push(href);
-				}
-			});
-			$('img').get().forEach(function(image) {
-				var src = $(image).attr("src");
-				if (src && src.startsWith('/')) src = baseDomain + src;
-				if (src && !scraper.mediaLinks.includes(src) && (src.endsWith("jpg") || src.endsWith("png"))) {
-					scraper.mediaLinks.push(src);
-				}
-			});
+			if (!scraper.marked(link.url)) {
+				scraper.gather(response, $);
+				scraper.mark(link.url);
+			}
+			// Go to next link
 			var links = $('a').get();
 			setTimeout(function(){
 				links = links.map(function(x) {
 					var href = $(x).attr("href");
-					if (href && href.startsWith('/')) href = baseDomain + href;
+					if (href && href.startsWith('/')) href = "http://" + response.req._headers.host + href;
 					return href;
 				}).filter(function(x) {
-					return (x && x.startsWith(baseDomain) && !scraper.marked(x));
+					return (x && x.startsWith("http") && !scraper.marked(x));
 				});
 				if (links.length == 0) {
-					// go back to parent
+					// Go back to parent
 					console.log("No unmarked links found. Backtracking...");
 					scraper.visit(link.parent);
 				} else {
-					// visit random one
+					// Visit random one
 					var rnd = links[Math.floor(Math.random()*links.length)];
 					scraper.visit((new Link(rnd, link)));
 				}
@@ -194,21 +223,21 @@ Okay, next up is a scraper that gathers images under a given domain with the abo
 
 	// Start the damn thing
 	this.go = function() {
-		this.visit(new Link(baseDomain));
+		this.visit(new Link(startURL));
 	};
 
 };
 
-new MediaScraper("http://www.lotsacode.tk").go();</code></pre>
-<p>Note: if you're getting <code>this.visited.includes is not a function</code> you should update nodejs to the latest version</p>
+new MediaScraper("http://lotsacode.tk").go();</code></pre>
 <p>
-	There's lots of room for optimization and probably a bunch of bugs, but I tried to keep it relatively simple. I hope it gives you a general idea.
+	There's lots of room for optimization and probably a bunch of bugs,
+    but I tried to keep it relatively simple. I hope it gives you a general idea.
 	<b>Don't expect this to work flawlessly on all websites!</b>
 </p>
 <p>
-	Here's the output after going to http://www.9gag.com
+	Here's the output after going to http://lotsacode.tk
 </p>
-<pre><code>Visiting http://www.9gag.com [1/10]
+<pre><code class="language-js">Visiting http://www.9gag.com [1/10]
 Visiting http://www.9gag.com/gag/aebPZWQ [2/10]
 Visiting http://www.9gag.com/member/resend-confirmation [3/10]
 Visiting http://www.9gag.com/gag/aebPDdQ [4/10]
@@ -262,7 +291,7 @@ https://img-9gag-fun.9cache.com/photo/amYbGAV_700b.jpg
 
 <p>And to get a glimpse of some backtracking action, here's the result after visiting http://www.lotsacode.tk.
 </p>
-<pre><code>Visiting http://www.lotsacode.tk [1/10]
+<pre><code class="language-js">Visiting http://www.lotsacode.tk [1/10]
 Visiting http://www.lotsacode.tk/post/polygon-madness-is-here [2/10]
 Visiting http://www.lotsacode.tk/post/hello-world [3/10]
 No unmarked links found. Backtracking...
@@ -283,4 +312,6 @@ http://www.lotsacode.tk/static/images/videos.png
 http://www.lotsacode.tk/static/images/git.png
 http://www.lotsacode.tk/static/images/about.png
 </code></pre>
-<p>That's all folks. I'm currently extending this to create a scraping app. Will add any further notes (and corrections) once it's done!</p>
+<p>Now go ahead and create your monster!
+    Be careful with the delay between requests -
+    webmasters eat scrapers for breakfast.</p>

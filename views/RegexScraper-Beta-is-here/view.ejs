@@ -1,3 +1,58 @@
 <h1>RegexScraper Beta is here</h1>
-
-<p></p>
+<p>
+	RegexScraper is a piece of software that explores the web and
+	gathers data specified by various options.
+	It can be used to find email addresses, media links or anything that
+	you can match with a regular expression.
+	It's still in Beta phase as I finished it just recently, there's lots of bugs to discover and features to develop.
+	If you find any bugs, let me know!
+</p>
+<img src="/static/images/rc_preview.png">
+<p>Let's go over the options.<p>
+<h3>Starting URL</h3>
+<p>The initial URL the scraper starts gathering data from.</p>
+<h3>CSS Selector</h3>
+<p>
+	Filter data matched by the CSS selector.
+	The default is <code>body</code> which means it looks at the whole web page.
+</p>
+<h3>Data Regex</h3>
+<p>
+	Regular expression for matching data.
+</p>
+<h3>Link Regex</h3>
+<p>
+	Regular expression that determines which links to visit.
+	By default it's <code>.*</code> which means that any link will do.
+</p>
+<h3>Post Processing</h3>
+<p>
+	Process the matched strings with a Javascript expression as a function of <code>s</code>.
+	The default value is <code>s</code> which means that the matched data is not processed at all.
+</p>
+<h3>Template</h3>
+<p>
+	A list of predefined configurations for the RegexScraper.
+	Currently there's templates for matching emails, image links, video links and questions.
+</p>
+<h3>Max link depth</h3>
+<p>
+	The maximum distance to the starting URL. For example, if the value is 1
+	the scraper will only visit links that it found from the starting URL.
+</p>
+<h3>Total visits</h3>
+<p>
+	Total amount of visits until the scraper stops.
+</p>
+<h3>Delay (ms)</h3>
+<p>
+	Delay between visits. Be gentle with this one.
+</p>
+<h3>Stay in start domain</h3>
+<p>
+	If chosen, the scraper will only visit links that start with the initial hostname.
+</p>
+<h3>Write to log.txt</h3>
+<p>
+	If chosen, the scraper will write the matched data to <code>./log.txt</code> and <code>./log_with_stamps.txt</code>
+</p>

@@ -1,0 +1,210 @@
+<h1>How to set up a modern dev environment for NodeJS</h1>
+<p>
+    Are you still writing your apps in dusty old Javascript ES5?
+    Still writing stylesheets with pure CSS?
+    Still embedding your source code in separate <code class="code-inline">script</code> tags?
+    Do you wanna be like the cool kids?
+    If you answered yes to any of the above, you should probably read this article.
+</p>
+<p>
+    In recent years there's been a flood of new "transpiled" web languages that compile to browser
+    compatible form. There's ES2015, TypeScript and CoffeeScript for writing
+    next generation Javascript. There's Less, Sass and Stylus for making CSS less of a pain.
+    There's Webpack and Browserify to make your Javascript less of a mess by introducing modules.
+</p>
+<p>
+    In this article I'm going to introduce you to my choices of such languages (ES2015/LESS/Browserify) and show you how to
+    automatize the build process with Gulp and Nodemon.
+    Once it's set up it's suited for modern front-end frameworks like React or Vue.
+</p>
+<h2>Introducing ES2015 with Babel</h2>
+<p><a href="https://babeljs.io/">Babel</a> is a preprocessor that
+compiles modern javascript (ES2015) to browser compatible form. For example</p>
+<pre><code class="language-js">[1,2,3].map(x => x*x);
+</code></pre>
+does not compile for all browsers, but Babel converts it to
+<pre><code class="language-js">[1,2,3].map(function(x) {
+    return x*x;
+});
+</code></pre>
+<p>
+which every browser should understand. There's alot of cool features worth learning, learn more
+<a href="https://babeljs.io/learn-es2015/">here</a>.
+</p>
+<h2>Manually compiling Babel</h2>
+<p>Install the command line interface and the default babel preset with</p>
+<pre><code class="language-none">npm install --save-dev babel-cli babel-preset-env</code></pre>
+<p>Add this stuff to package.json</p>
+<pre><code class="language-none">{
+    ...
+    "scripts": {
+        "build": "babel src -d lib"
+    },
+    "babel": {
+        "presets": ["env"]
+    }
+    ...
+}
+</code></pre>
+<p>Then do <code class="code-inline">npm build</code>.</p>
+<h2>Introducing LESS</h2>
+<p>
+    LESS is an extension of CSS that compiles to plain old CSS. It features numerous
+    features like variables and mixins that help you write write more maintainable, themeable and extendable CSS. For example
+</p>
+<pre><code class="language-css">@color-base: #2d5e8b;
+.my-class {
+  background-color: @color-base;
+  .my-other-class {
+    background-color: #fff;
+    color: @color-base;
+  }
+}
+</code></pre>
+Compiles to
+<pre><code class="language-css">.my-class {
+  background-color: #2d5e8b;
+}
+.my-class .my-other-class {
+  background-color: #fff;
+  color: #2d5e8b;
+}
+</code></pre>
+<p>
+    Read more about LESS features <a href="http://lesscss.org/features/">here</a>.
+</p>
+<h2>Manually compiling LESS</h2>
+Compiling LESS is straightforward. Install it with npm
+<pre><code class="language-none">npm install -g less</code></pre>
+Put <code class="code-inline">styles.less</code> to <code class="code-inline">./src</code> and do
+<pre><code class="language-none">lessc src/styles.less lib/styles.css</code></pre>
+
+<h2>Introducing Browserify</h2>
+
+<p>
+    In the old days you would include your Javascript in separate <code class="code-inline">script</code> tags.
+    Let's say you have a <code class="code-inline">main.js</code> that acts as the entry point and
+    <code class="code-inline">Game.js</code> that contains functionality for a game.
+</p>
+<code class="code-inline">Game.js</code>
+<pre><code class="language-none">const Game = function() {
+    // Insert functionality here...
+}
+</code></pre>
+<code class="code-inline">main.js</code>
+<pre><code class="language-js">(new Game()).start()</code></pre>
+<code class="code-inline">index.html</code>
+<pre><code class="language-html">...
+&lt;script src="Game.js"&gt;&lt;/script&gt;
+&lt;script src="main.js"&gt;&lt;/script&gt;
+...
+</pre></code>
+<p>
+    There's numerous problems that arise with this, especially for large scale projects.
+    Globals can spill to your other scripts, you have to worry about the order of imports
+    , the browser has to make several requests to load each script and it's cumbersome to add
+    yet another script tag for each new module.
+    Browserify can make things better.
+</p>
+<code class="code-inline">Game.js</code>
+<pre><code class="language-js">export const Game = function() {
+    // Insert functionality here...
+}
+</code></pre>
+<code class="code-inline">main.js</code>
+<pre><code class="language-js">import { Game } from './Game.js';
+(new Game()).start();
+</code></pre>
+<code class="code-inline">index.html</code>
+<pre><code class="language-html">...
+&lt;script src="bundle.js"&gt;&lt;/script&gt;
+...
+</code></pre>
+<p>
+    As you can see, you can create a module by using the export keyword
+    and import them to another file.
+    Browserify looks at your entry point (in this case <code class="code-inline">main.js</code>) and
+    creates <code class="code-inline">bundle.js</code> from your source files by recursively looking at <code class="code-inline">require</code> calls.
+    The import-export syntax is actually a feature of ES2015.
+    Without ES2015 the syntax to import modules is <code class="code-inline">require(...)</code>
+    and to export stuff you add it to <code class="code-inline">module.exports = {...}</code>.
+</p>
+<h2>Manually building Browserify</h2>
+<p>Install it with npm</p>
+<pre><code class="language-none">npm install browserify -g</code></pre>
+<p>Then do</p>
+<pre><code class="language-none">browserify main.js -o bundle.js</code></pre>
+<h2>Introducing Gulp</h2>
+<p>
+    Now that we have all these new flashy tools it'd be nice to have a script that compiles
+    all of them with the press of a button and minifies the result. We could make it from scratch
+    but Gulp offers an 'out of the box' solution.
+</p>
+<p>Install Gulp with npm. We need the command line tool along with
+some plugins
+</p>
+<pre><code class="language-none">npm install --global gulp-cli</code></pre>
+<pre><code class="language-none">npm install --save-dev gulp gulp-babel babel-preset-env gulp-less vinyl-source-stream gulp-browserify gulp-uglify gulp-streamify</code></pre>
+<p>
+    Add <code class="code-inline">gulpfile.js</code> to the root of your project.
+    The following file compiles minified ES2015/LESS and places the result in <code class="code-inline">./static</code>
+</p>
+<pre><code class="language-js">const gulp = require('gulp');
+const less = require('gulp-less');
+const uglify = require('gulp-uglify')
+const streamify = require('gulp-streamify');
+const browserify = require('browserify');
+const babelify = require('babelify');
+const source = require('vinyl-source-stream');
+
+gulp.task('js', function(){
+    return browserify({entries: 'src/js/main.js', debug: true})
+        .transform(babelify)
+        .bundle()
+        .pipe(streamify(uglify()))
+        .pipe(source('bundle.js'))
+        .pipe(gulp.dest('static/js'));
+});
+
+gulp.task('css', function(){
+    return gulp.src('src/css/*.less')
+        .pipe(less())
+        .pipe(gulp.dest('static/css'))
+});
+
+gulp.task('default', [ 'js', 'css' ]);
+</code></pre>
+<p>Now you can run gulp by simply calling <code class="code-inline">gulp</code> from terminal.</p>
+
+<h2>Live reloading with Nodemon</h2>
+<p>
+    The last step is to make node automatically press the Gulp button
+    and restart the web server after you write changes to a source file.
+</p>
+<p>Install nodemon with npm</p>
+<pre><code class="language-none">npm install nodemon -g</code></pre>
+<p>Add this nodemon script to <code class="code-inline">package.json</code>
+</p>
+<pre><code class="language-json">{
+    ...
+    "scripts": {
+        "start": "nodemon --watch src --exec 'gulp && nodejs server.js'"
+    },
+    ...
+}</code></pre>
+<p>To start the server do <code class="code-inline">npm start</code>.</p>
+<h2>A note on React, Vue etc</h2>
+<p>
+    This kind of environment is typically used with a front-end framework like React or Vue.
+    Using them is out of scope of this tutorial, but using them is simple once you have the environment set up.
+    Simply include the library in your project and use <code class="code-inline">import</code>.
+    For React you need to include another Babel preset in your project, <code class="code-inline">babel-preset-react</code>.
+    Vue works out of the box, but I recommend checking out <a href="https://github.com/vuejs/vueify">vueify</a> to enable file components.
+</p>
+<h2>A note on Electron</h2>
+<p>
+    For Electron, there exists a nice little tool that does all of the dirty work for you,
+    <code class="code-inline">electron-prebuilt-compile</code>. All you have to do is <code class="code-inline">npm install electron-prebuilt-compile --save-dev</code>
+    instead of <code class="code-inline">npm install electron --save-dev</code> when installing electron for your application and you're done. Read more about it
+    <a href="https://github.com/electron/electron-compile">here</a>.
+</p>

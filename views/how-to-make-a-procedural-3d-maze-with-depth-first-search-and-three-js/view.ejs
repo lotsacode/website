@@ -1,0 +1,395 @@
+<h1>How to make a procedural 3D maze with depth-first search and ThreeJS.</h1>
+<p>
+	I need to make a 3D maze for a game I'm developing, so might aswell share it.
+	You can find the code from my <a href="https://github.com/lotsacode/Maze">Github</a>.
+	I'll explain the algorithm in pseudocode and then copy paste the code along with the graphical side.
+	The end result looks like this
+</p>
+<div id="three" style="width: 100%; height: 400px;"></div>
+
+<h2>The algorithm</h2>
+<p>
+	The idea is to start off with a 2D grid of cells.
+	Each cell is an object with the following properties
+	<ul>
+		<li><code class="code-inline">i</code>, <code class="code-inline">j</code> indexes in the 2D-array</li>
+		<li><code class="code-inline">right</code> side wall's state (0 = no wall, 1 = wall exists)</li>
+		<li><code class="code-inline">up</code>, <code class="code-inline">left</code>, <code class="code-inline">down</code>
+			 likewise</li>
+		<li><code class="code-inline">visited</code> flag (boolean)</li>
+	</ul>
+<p>
+	Each cell is initially surrounded by 4 walls in each direction.
+ 	Along with the grid we need an array of cells (a stack) for backtracking the generation path.
+	The algorithm goes like this
+</p>
+<ol>
+	<li>Choose an initial cell</li>
+	<li>Select a random neighbouring cell that has not yet been visited.</li>
+	<li>Remove the wall between the two cells and move to the new cell, marking it as visited.
+		Push it to the stack.</li>
+	<li>Continue steps 2 and 3 until a cell is reached that has no unvisited neighbours.</li>
+	<li>Backtrack the generation path until a cell is reached with an unvisited neighbour.</li>
+</ol>
+<p>
+	This process continues until every cell has been visited, causing the algorithm to
+	backtrack all the way back to the beginning cell.
+	The selection of a "random neighbouring cell" can be adjusted to generate different kind of mazes.
+
+</p>
+<h2>Javascript / ThreeJS implementation</h2>
+<p>
+	This thing generates the maze and returns a <code class="code-inline">THREE.Geometry</code>.
+
+</p>
+<pre><code class="language-js">var Maze = function(opts) {
+	if (!opts) opts = {};
+	const cols = !!opts.cols ? opts.cols : 25;				 // amount of cell columns
+	const rows = !!opts.rows ? opts.rows : 25;				 // amount of cell rows
+	const scale = !!opts.scale ? opts.scale : 10;			 // scale of maze
+	const thickness = !!opts.thickness ? opts.thickness : 1; // thickness of maze walls
+	const depth = !!opts.depth ? opts.depth : 10;			 // height of maze walls
+	const rnd = !!opts.rnd ? opts.rnd : Math.random;		 // custom random sampler (between 0 and 1)
+	const cells = [];										 // 2d-array of cells
+	const geometry = new THREE.Geometry();
+	// Initialize the cells
+	for (var i = 0; i < cols; i++) {
+		cells.push([]);
+		for (var j = 0; j < rows; j++) {
+			cells[i][j] = {
+				"i": i, "j": j,
+				"right": 1, "left": 1, "up": 1, "down": 1,
+				"visited": false
+			}
+		}
+	}
+	const initial = cells[0][0]; // Choose the beginning cell
+	initial.visited = true;
+	var current = initial; 		 // Current cell while generating
+	const stack = [initial];
+	var generating = true;
+	var neighbours = function(cell) {
+		var result = []
+		if (cell.i + 1 < cols)  result.push(cells[cell.i + 1][cell.j]);
+		if (cell.i - 1 >= 0) 	 result.push(cells[cell.i - 1][cell.j]);
+		if (cell.j + 1 < rows) result.push(cells[cell.i][cell.j + 1]);
+		if (cell.j - 1 >= 0) 	 result.push(cells[cell.i][cell.j - 1]);
+		result = result.filter(function(x){ return !x.visited });
+		return result;
+	}
+	// Generate the maze
+	while (generating) {
+		// Choose random unvisited neighbour
+		var n = neighbours(current);
+		// console.log("visiting " + current.i + "," + current.j)
+		if (n.length > 0) {
+			var next = n[Math.floor(rnd()*n.length)];
+			if (next.i == current.i + 1 && next.j == current.j) {
+				// Go right
+				// console.log("going right");
+				current.right = 0;
+				current = next;
+				current.left = 0;
+			} else if (next.i == current.i - 1 && next.j == current.j) {
+				// Go left
+				// console.log("going left");
+				current.left = 0;
+				current = next;
+				current.right = 0;
+			} else if (next.i == current.i && next.j == current.j + 1) {
+				// Go up
+				// console.log("going up");
+				current.up = 0;
+				current = next;
+				current.down = 0;
+			} else if (next.i == current.i && next.j == current.j - 1) {
+				// Go down
+				// console.log("going down");
+				current.down = 0;
+				current = next;
+				current.up = 0;
+			}
+			current.visited = true;
+			stack.push(current);
+		} else {
+			// Backtrack
+			while (n.length == 0) {
+				if (stack.length > 1) {
+					stack.pop();
+					current = stack[stack.length-1];
+					n = neighbours(current)
+				} else {
+					// All done
+					generating = false;
+					break;
+				}
+			}
+		}
+	}
+	// Create geometry
+	var wall = new THREE.Mesh(new THREE.BoxGeometry(thickness, rows*scale-thickness, depth));
+	wall.position.x = -scale/2;
+	wall.position.y = rows*scale/2 - scale/2;
+	geometry.mergeMesh(wall);
+	wall.position.x = cols*scale - scale/2 ;
+	wall.position.y = rows*scale/2 - scale/2;
+	geometry.mergeMesh(wall);
+	var wall = new THREE.Mesh(new THREE.BoxGeometry(cols*scale-thickness, thickness, depth));
+	wall.position.x = cols*scale/2 - scale/2;
+	wall.position.y = -scale/2;
+	geometry.mergeMesh(wall);
+	wall.position.x = cols*scale/2 - scale/2;
+	wall.position.y = rows*scale - scale/2;
+	geometry.mergeMesh(wall);
+	var pillar = new THREE.Mesh(new THREE.BoxGeometry(thickness, thickness, depth));
+	pillar.position.x = -scale/2;
+	pillar.position.y = -scale/2;
+	geometry.mergeMesh(pillar);
+	pillar.position.x = -scale/2;
+	pillar.position.y = rows*scale-scale/2;
+	geometry.mergeMesh(pillar);
+	pillar.position.x = cols*scale-scale/2;
+	pillar.position.y = rows*scale-scale/2;
+	geometry.mergeMesh(pillar);
+	pillar.position.x = cols*scale-scale/2;
+	pillar.position.y = -scale/2;
+	geometry.mergeMesh(pillar);
+	var verticalWall = new THREE.Mesh(new THREE.BoxGeometry(
+		thickness, scale - thickness, depth));
+	var horizontalWall  = new THREE.Mesh(new THREE.BoxGeometry(
+		scale - thickness, thickness, depth));
+	for (var i = 0; i < cells.length; i++) {
+		for (var j = 0; j < cells[i].length; j++) {
+			if (cells[i][j].right) {
+				verticalWall.position.x = i*scale + scale/2;
+				verticalWall.position.y = j*scale;
+				geometry.mergeMesh(verticalWall);
+			}
+			if (cells[i][j].down && j > 0) {
+				horizontalWall.position.x = i*scale;
+				horizontalWall.position.y = j*scale - scale/2;
+				geometry.mergeMesh(horizontalWall);
+			}
+			if (i < cols-1 && j < rows-1) {
+				pillar.position.x = i*scale + scale/2;
+				pillar.position.y = j*scale + scale/2;
+				geometry.mergeMesh(pillar);
+			}
+		}
+	}
+	// Move origin to maze center
+	geometry.applyMatrix( new THREE.Matrix4().makeTranslation(-cols*scale/2, -rows*scale/2, 0) );
+	return {cells: cells, geometry: geometry};
+}
+</code></pre>
+<p>
+	And here's the scene for showcasing the maze
+</p>
+<pre><code class="language-js">var scene, camera, renderer, mesh;
+function init() {
+	scene = new THREE.Scene();
+	const width = $("#three").width();
+	const height = $("#three").height();
+	camera = new THREE.PerspectiveCamera(30, width/height, 1, 1000);
+	camera.position.z = 500;
+	camera.position.x = 20;
+	camera.position.y = -500;
+	camera.rotation.x = Math.PI/8;
+	camera.lookAt(new THREE.Vector3(0,0,0));
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(width, height);
+	renderer.setClearColor(new THREE.Color(0.99, 0.99, 0.99));
+	$("#three").append(renderer.domElement);
+	const maze = new Maze().geometry;
+	const material = new THREE.MeshBasicMaterial({color: 0x0000ff});
+	mesh = new THREE.Mesh(maze, material);
+	scene.add(mesh);
+};
+function render() {
+	requestAnimationFrame(render);
+	renderer.render(scene, camera);
+	mesh.rotation.z += 0.0025;
+};
+init();
+render();
+</code></pre>
+<script>
+var Maze = function(opts) {
+	if (!opts) opts = {};
+	const cols = !!opts.cols ? opts.cols : 25;				 // amount of cell columns
+	const rows = !!opts.rows ? opts.rows : 25;				 // amount of cell rows
+	const scale = !!opts.scale ? opts.scale : 10;			 // scale of maze
+	const thickness = !!opts.thickness ? opts.thickness : 2; // thickness of maze walls
+	const depth = !!opts.depth ? opts.depth : 5;			 // height of maze walls
+	const open = !!opts.open ? opts.open : true;			 // include start and end doors?
+	const rnd = !!opts.rnd ? opts.rnd : Math.random;		 // custom random sampler (between 0 and 1)
+	const cells = [];										 // 2d-array of cells
+	const geometry = new THREE.Geometry();
+	// Initialize the cells
+	for (var i = 0; i < cols; i++) {
+		cells.push([]);
+		for (var j = 0; j < rows; j++) {
+			cells[i][j] = {
+				"i": i, "j": j,
+				"right": 1, "left": 1, "up": 1, "down": 1,
+				"visited": false
+			}
+		}
+	}
+	const initial = cells[0][0]; // Choose the beginning cell
+	initial.visited = true;
+	var current = initial; 		 // Current cell while generating
+	const stack = [initial];
+	var generating = true;
+	var neighbours = function(cell) {
+		var result = []
+		if (cell.i + 1 < cols)  result.push(cells[cell.i + 1][cell.j]);
+		if (cell.i - 1 >= 0) 	result.push(cells[cell.i - 1][cell.j]);
+		if (cell.j + 1 < rows) 	result.push(cells[cell.i][cell.j + 1]);
+		if (cell.j - 1 >= 0) 	result.push(cells[cell.i][cell.j - 1]);
+		result = result.filter(function(x){ return !x.visited });
+		return result;
+	}
+	// Generate the maze
+	while (generating) {
+		// Choose random unvisited neighbour
+		var n = neighbours(current);
+		// console.log("visiting " + current.i + "," + current.j)
+		if (n.length > 0) {
+			var next = n[Math.floor(rnd()*n.length)];
+			if (next.i == current.i + 1 && next.j == current.j) {
+				// Go right
+				// console.log("going right");
+				current.right = 0;
+				current = next;
+				current.left = 0;
+			} else if (next.i == current.i - 1 && next.j == current.j) {
+				// Go left
+				// console.log("going left");
+				current.left = 0;
+				current = next;
+				current.right = 0;
+			} else if (next.i == current.i && next.j == current.j + 1) {
+				// Go up
+				// console.log("going up");
+				current.up = 0;
+				current = next;
+				current.down = 0;
+			} else if (next.i == current.i && next.j == current.j - 1) {
+				// Go down
+				// console.log("going down");
+				current.down = 0;
+				current = next;
+				current.up = 0;
+			}
+			current.visited = true;
+			stack.push(current);
+		} else {
+			// Backtrack
+			while (n.length == 0) {
+				if (stack.length > 1) {
+					stack.pop();
+					current = stack[stack.length-1];
+					n = neighbours(current)
+				} else {
+					// All done
+					generating = false;
+					break;
+				}
+			}
+		}
+	}
+	// Create geometry
+	if (open) {
+		var wall = new THREE.Mesh(new THREE.BoxGeometry(thickness, rows*scale-thickness-scale, depth));
+		wall.position.x = -scale/2;
+		wall.position.y = rows*scale/2;
+		geometry.mergeMesh(wall);
+		wall.position.x = cols*scale - scale/2;
+		wall.position.y = rows*scale/2 - scale;
+		geometry.mergeMesh(wall);
+	} else {
+		var wall = new THREE.Mesh(new THREE.BoxGeometry(thickness, rows*scale-thickness, depth));
+		wall.position.x = -scale/2;
+		wall.position.y = rows*scale/2 - scale/2;
+		geometry.mergeMesh(wall);
+		wall.position.x = cols*scale - scale/2;
+		wall.position.y = rows*scale/2 - scale/2;
+		geometry.mergeMesh(wall);
+	}
+	var wall = new THREE.Mesh(new THREE.BoxGeometry(cols*scale-thickness, thickness, depth));
+	wall.position.x = cols*scale/2 - scale/2;
+	wall.position.y = -scale/2;
+	geometry.mergeMesh(wall);
+	var wall = new THREE.Mesh(new THREE.BoxGeometry(cols*scale-thickness, thickness, depth));
+	wall.position.x = cols*scale/2 - scale/2;
+	wall.position.y = rows*scale - scale/2;
+	geometry.mergeMesh(wall);
+	var pillar = new THREE.Mesh(new THREE.BoxGeometry(thickness, thickness, depth));
+	pillar.position.x = -scale/2;
+	pillar.position.y = -scale/2;
+	geometry.mergeMesh(pillar);
+	pillar.position.x = -scale/2;
+	pillar.position.y = rows*scale-scale/2;
+	geometry.mergeMesh(pillar);
+	pillar.position.x = cols*scale-scale/2;
+	pillar.position.y = rows*scale-scale/2;
+	geometry.mergeMesh(pillar);
+	pillar.position.x = cols*scale-scale/2;
+	pillar.position.y = -scale/2;
+	geometry.mergeMesh(pillar);
+	var verticalWall = new THREE.Mesh(new THREE.BoxGeometry(
+		thickness, scale - thickness, depth));
+	var horizontalWall  = new THREE.Mesh(new THREE.BoxGeometry(
+		scale - thickness, thickness, depth));
+	for (var i = 0; i < cells.length; i++) {
+		for (var j = 0; j < cells[i].length; j++) {
+			if (cells[i][j].right && i < cells[i].length-1) {
+				verticalWall.position.x = i*scale + scale/2;
+				verticalWall.position.y = j*scale;
+				geometry.mergeMesh(verticalWall);
+			}
+			if (cells[i][j].down && j > 0) {
+				horizontalWall.position.x = i*scale;
+				horizontalWall.position.y = j*scale - scale/2;
+				geometry.mergeMesh(horizontalWall);
+			}
+			if (i < cols-1 && j < rows-1) {
+				pillar.position.x = i*scale + scale/2;
+				pillar.position.y = j*scale + scale/2;
+				geometry.mergeMesh(pillar);
+			}
+		}
+	}
+	// Move origin to maze center
+	geometry.applyMatrix( new THREE.Matrix4().makeTranslation(-cols*scale/2, -rows*scale/2, 0) );
+	return {cells: cells, geometry: geometry};
+}
+var scene, camera, renderer, mesh;
+function init() {
+	scene = new THREE.Scene();
+	const width = $("#three").width();
+	const height = $("#three").height();
+	camera = new THREE.PerspectiveCamera(30, width/height, 1, 1000);
+	camera.position.z = 500;
+	camera.position.x = 20;
+	camera.position.y = -500;
+	camera.rotation.x = Math.PI/8;
+	camera.lookAt(new THREE.Vector3(0,0,0));
+	renderer = new THREE.WebGLRenderer({"antialias": true});
+	renderer.setSize(width, height);
+	renderer.setClearColor(new THREE.Color(0.99, 0.99, 0.99));
+	$("#three").append(renderer.domElement);
+	const maze = new Maze().geometry;
+	const material = new THREE.MeshBasicMaterial({color: 0x0000ff});
+	mesh = new THREE.Mesh(maze, material);
+	scene.add(mesh);
+};
+function render() {
+	requestAnimationFrame(render);
+	renderer.render(scene, camera);
+	mesh.rotation.z += 0.0025;
+};
+init();
+render();
+</script>

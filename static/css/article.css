@@ -1,0 +1,148 @@
+@font-face {
+    font-family: Hack;
+    src: url('../fonts/Hack-Regular.ttf');
+}
+
+pre {
+  tab-size: 4;
+  -o-tab-size: 4;   /* Code for Opera 10.6-12.1 */
+  -moz-tab-size: 4; /* Code for Firefox */
+}
+
+blockquote {
+  border-left: 8px solid #e0e0e0;
+  padding-left: 10px;
+}
+
+a {
+  text-decoration: none;
+  font-family: MontSerrat;
+  font-size: 17px;
+  color: #0088ff;
+  cursor: pointer;
+}
+
+a:hover {
+    border-bottom: 3px solid #0080ff;
+}
+
+a:active {
+    font-weight: normal;
+}
+
+h1, h2, h3, h4 {
+  font-family: Montserrat-Bold;
+  color: #ff9900;
+  line-height: 34px;
+}
+
+h1 {
+  font-size: 42px;
+  margin-top: 70px;
+  margin-bottom: 20px;
+  line-height: 46px;
+}
+
+h2 {
+  font-size: 32px;
+}
+
+h3 {
+  font-size: 20px;
+}
+
+h4 {
+  font-size: 16px;
+}
+
+#article {
+  width: calc(55%);
+  min-width: 480px;
+  min-height: 680px;
+  margin: 0 auto;
+}
+
+#article img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+}
+
+.article-date {
+  height: 15px;
+  margin-left: 0px;
+  color: rgba(0,0,0,0.4);
+  position: absolute;
+  top: 30px;
+}
+
+.code-inline {
+  font-size: 15px;
+  padding: 2px 4px 2px 4px;
+  background: #f0f0f0;
+  color: #303030;
+  font-family: Hack;
+}
+
+pre code {
+    font-size: 14px;
+    font-family: Hack;
+}
+
+canvas {
+  border: 1px solid #e0e0e0;
+}
+
+.image-wrapper img {
+  display: block;
+  margin: 0 auto;
+}
+
+.text {
+  margin-bottom: 40px;
+}
+
+#title {
+}
+
+#date img {
+  float: left;
+  opacity: 0.66;
+}
+
+#date div {
+  margin-top: 0px;
+  margin-left: 5px;
+  float: left;
+  display: inline-block;
+}
+
+#navigation {
+  height: 40px;
+  margin-top: 40px;
+  margin-bottom: 40px;
+  line-height: 22px;
+  font-size: 18px;
+}
+
+#previous, #next {
+  width: 50%;
+  margin-bottom: 40px;
+}
+
+#previous h3, #next h3 {
+    color: #ff9900;
+    font-size: 18px;
+    margin-bottom: 0px;
+    margin-top: 10px;
+}
+
+#next {
+  float: right;
+  text-align: right;
+}
+
+#previous {
+  float: left;
+  width: 50%;
+}

@@ -1,7 +1,7 @@
-<h1>User authentication example with NodeJS and MongoDB</h1>
+<h1>User authentication example with NodeJS, jQuery and MongoDB</h1>
 <p>
-	Let's make a simple login/register page with NodeJS and MongoDB!
-	I'm just gonna copy paste the JS/HTML5 here without much explanation. Here's the things we'll use
+	Let's make a simple login/register page with NodeJS, jQuery and MongoDB!
+	I'm just gonna copy paste the code without much explanation. Here's the things we'll use
 	<ul>
 		<li>MongoDB to store registered users</li>
 		<li>Web server with NodeJS, Express, templating with EJS</li>
@@ -11,10 +11,15 @@
 </p>
 <p>Here's the end result</p>
 <iframe width="100%" height="400" src="http://youtube.com/embed/z6tMRxGG6Ss"></iframe>
-<p>Download MongoDB from <a href="https://www.mongodb.com/">here</a>. To start it with windows, navigate to the installation directory and run <code>./bin/mongod.exe</code>.
-The data is stored by default at <code>X:/data</code>. Not sure about Linux/OSX but the setup should be similiar. A nice thing about MongoDB is that once the executable is running you're all done, no further configuration needed. Install the server side dependencies with npm <code>npm install mongodb express express-session ejs</code>.</p>
+<p>Download MongoDB from <a href="https://www.mongodb.com/">here</a>. To start it with windows, navigate to the installation directory and run <code class="code-inline">./bin/mongod.exe</code>.
+The data is stored by default at <code class="code-inline">X:/data</code>.
+Not sure about Linux/OSX but the setup should be similiar.
+A nice thing about MongoDB is that once the executable is running you're all done,
+no further configuration needed. Install the server side dependencies with npm
+<pre><code class="language-js">npm install mongodb express express-session ejs</code></pre>
+</p>
 <h2>The server</h2>
-<pre><code>const MongoClient = require('mongodb').MongoClient;
+<pre><code class="language-js">const MongoClient = require('mongodb').MongoClient;
 MongoClient.connect('mongodb://localhost:27017/mydb', function(err, db) {
 
 	if (err) return console.log(err);
@@ -91,16 +96,21 @@ MongoClient.connect('mongodb://localhost:27017/mydb', function(err, db) {
 });
 </code></pre>
 <p>
-	It's a basic setup with POST-requests for register, login and signout. A couple notes. Session data is unique for each client so we can safely store the user object to <code>req.session</code> and pass it down to the client. A nice thing about MongoDB that it dynamically creates a collection if it doesn't exist.
+	It's a basic setup with POST-requests for register, login and signout.
+	A couple notes. Session data is unique for each client so we can safely
+	store the user object to <code class="code-inline">req.session</code> and pass it down to the
+	client. A nice thing about MongoDB that it dynamically creates a collection
+	if it doesn't exist.
 </p>
 <p>
-	In a real world situation it's important to use HTTPS to prevent anyone from stealing credentials on their way to the server.
+	In a real world situation it's important to use HTTPS to prevent anyone from
+	stealing credentials on their way to the server.
 	I haven't tested the server for security issues, so use at your own risk.
 </p>
 <h2>The HTML</h2>
-<p> Make sure to include jQuery to <code>./static/js/jquery-2.1.1.min.js</code>. The view should be at <code>./views/index.ejs</code></p>
+<p> Make sure to include jQuery to <code class="code-inline">./static/js/jquery-2.1.1.min.js</code>. The view should be at <code class="code-inline">./views/index.ejs</code></p>
 
-<pre><code>&lt;!DOCTYPE html&gt;
+<pre><code class="language-js">&lt;!DOCTYPE html&gt;
 &lt;html&gt;
 &lt;head&gt;
 	&lt;script src="/static/js/jquery-2.1.1.min.js"&gt;&lt;/script&gt;

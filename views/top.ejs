@@ -1,0 +1,26 @@
+<div id="top">
+
+	<!--<div class="top-item">
+		<img class="top-image" width="15px" src="/static/images/rss.png"/>
+		<div class="top-text">RSS</div>
+	</div>-->
+
+	<!--<div id="top-published">Last published <%=lastPub%></div>-->
+</div>
+<a href="/">
+	<div class="menu-button" id="archive-button"><img width="50" src="/static/images/archive-icon.png"></div>
+</a>
+<a href="http://github.com/lotsacode">
+	<div class="menu-button" id="github-button"><img width="50" src="/static/images/git-icon.svg"></div>
+</a>
+<a href="/article/hello-world">
+	<div class="menu-button" id="question-button"><img width="50" src="/static/images/question-icon.png"></div>
+</a>
+<script>
+	$(".top-text").mouseenter(function(){
+		$(this).css({ transform: 'scale(1.1)' });
+	});
+	$(".top-text").mouseleave(function(){
+		$(this).css({ transform: 'scale(1.0)' });
+	});
+</script>
